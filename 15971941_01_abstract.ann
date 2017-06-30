@@ -1,0 +1,43 @@
+T1	Anatomy 758 769	mesenchymal
+T2	Anatomy 863 872	embryonic
+T3	Species 752 757	human
+T4	CellType 26 36	stem cells
+T5	Species 10 15	Human
+T6	Anatomy 16 25	embryonic
+T7	CellType 542 563	skeletal muscle cells
+T8	CellType 961 973	muscle cells
+T9	Anatomy 942 946	bone
+T10	Anatomy 952 960	skeletal
+T11	Anatomy 926 929	fat
+T12	CellType 10 36	Human embryonic stem cells
+T13	CellType 262 272	stem cells
+T14	Anatomy 252 261	embryonic
+T15	CellType 906 916	precursors
+T16	CellType 894 916	mesenchymal precursors
+T17	CellType 873 883	stem cells
+T18	CellType 752 774	human mesenchymal cell
+T19	CellType 863 883	embryonic stem cells
+T20	Anatomy 894 905	mesenchymal
+T21	Anatomy 278 295	tissue-restricted
+T22	CellType 411 433	mesenchymal precursors
+T23	Anatomy 445 454	embryonic
+T24	Species 439 444	human
+T25	CellType 296 306	precursors
+T26	CellType 423 433	precursors
+T27	CellType 455 465	stem cells
+T28	CellType 439 465	human embryonic stem cells
+T29	CellType 278 306	tissue-restricted precursors
+T30	Anatomy 521 530	cartilage
+T31	Anatomy 532 536	bone
+T32	Anatomy 542 550	skeletal
+T33	CellType 551 563	muscle cells
+T34	Anatomy 516 519	fat
+T35	Species 78 83	human
+T36	CellType 952 973	skeletal muscle cells
+T37	CellType 252 272	embryonic stem cells
+T38	Anatomy 657 666	embryonic
+T39	Anatomy 627 635	mesoderm
+T40	Anatomy 411 422	mesenchymal
+T41	Anatomy 931 940	cartilage
+T42	Anatomy 952 967	skeletal muscle
+T43	Anatomy 542 557	skeletal muscle
