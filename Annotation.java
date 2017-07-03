@@ -49,4 +49,13 @@ public class Annotation{
     public String toString(){
         return id + " : " + label + " (" + start + "-" + end + ")";
     }
+
+    public boolean intersecte(Annotation a) {
+        if (a.getStart() < this.end && a.getStart() > this.start
+                || a.getEnd() < this.end && a.getEnd() > this.start) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
