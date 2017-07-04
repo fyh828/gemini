@@ -4,23 +4,76 @@ public class Main {
 
     public static void main(String[] arg) {
 
-        Annotation[] all = loadAnnotations(arg[0]);
-//        for (int i=0 ; i<all.length ; i++) {
-//            System.out.println(all[i]);
+        // load annotations of the file in the first parameter
+        Annotation[] allFile1 = loadAnnotations(arg[0]);
+        Annotation[] allFile2 = loadAnnotations(arg[1]);
+//        for (int i=0 ; i<allFile1.length ; i++) {
+//            System.out.println(allFile1[i]);
 //        }
-        Annotation a = all[Integer.parseInt(arg[1])];
-        System.out.println(testAnnotation(arg[0], a));
+//        Annotation a = allFile1[Integer.parseInt(arg[2])];
+//        System.out.println(testAnnotation(arg[0], a));
+
+        // test all annotations of the file
+        // incorrect line : n° line
+        String test = "Incorrect annotations : ";
+        for (int i=0 ; i<allFile1.length ; i++) {
+            Annotation a = allFile1[i];
+            if (testAnnotation(arg[0], a) == false) {
+                test += a.getId() + ", ";
+            }
+        }
+        System.out.println(test);
+
+//        Annotation a = allFile1[Integer.parseInt(arg[2])];
+//        Annotation b = allFile2[Integer.parseInt(arg[3])];
+//        System.out.println("\n" + a.intersectionPercentage(b));
+
+        System.out.println("score : "+score(allFile1, allFile2, arg[2]));
     }
 
 
 
-    public static Annotation[] aligneAnnotations(Annotation[] th, Annotation[] tr) {
+    public static float score(Annotation[] th, Annotation[] tr, String typeScore) {
+        Annotation[] correspTh = alignAnnotations(th, tr);
+
+        if (typeScore.substring(0, 4).equals("weak")) {
+
+        }
+        if (typeScore.substring(0, 4).equals("stri")) {
+
+        }
+        if (typeScore.substring(0, 4).equals("weig")) {
+
+        }
+
+        if (typeScore.substring(typeScore.length()-6, typeScore.length()).equals("cision")) {
+            int nbMatches = 0;
+            for (int i=0 ; i<correspTh.length ; i++) {
+                if (correspTh[i] != null) {
+                    nbMatches++;
+                }
+            }
+            float precision = nbMatches / th.length;
+            return precision;
+        }
+        if (typeScore.substring(typeScore.length()-6, typeScore.length()).equals("recall")) {
+
+        }
+        if (typeScore.substring(typeScore.length()-6, typeScore.length()).equals("easure")) {
+
+        }
+
+        return 0;
+    }
+
+
+    public static Annotation[] alignAnnotations(Annotation[] th, Annotation[] tr) {
         Annotation[] correspTh = new Annotation[th.length];
 
         for (int i=0 ; i<th.length ; i++) {
             for (int j=0 ; j<tr.length ; j++) {
-                if (th[i].intersecte(tr[j]) == true
-                        && th[i].getType().compareTo(tr[j].getType()) == 0) {
+                if (th[i].intersect(tr[j]) == true
+                        && th[i].getType().equals(tr[j].getType())) {
                     correspTh[i] = tr[j];
                 }
             }
@@ -37,15 +90,9 @@ public class Main {
             text += openedFile[i] + "\n";
         } // put character string table's items into a character string
 
-        if (a.getLabel().compareTo(text.substring(a.getStart(), a.getEnd())) == 0) {
-            System.out.println(a.getLabel());
-            System.out.println(text.substring(a.getStart(), a.getEnd()));
-            return true;
-        } else {
-            System.out.println(a.getLabel());
-            System.out.println(text.substring(a.getStart(), a.getEnd()));
-            return false;
-        }
+        //System.out.println("-"+a.getLabel()+"-");
+        //System.out.println("-"+text.substring(a.getStart(), a.getEnd())+"-");
+        return a.getLabel().equals(text.substring(a.getStart(), a.getEnd()));
     }
 
 

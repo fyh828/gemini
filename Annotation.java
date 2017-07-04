@@ -50,12 +50,24 @@ public class Annotation{
         return id + " : " + label + " (" + start + "-" + end + ")";
     }
 
-    public boolean intersecte(Annotation a) {
-        if (a.getStart() < this.end && a.getStart() > this.start
-                || a.getEnd() < this.end && a.getEnd() > this.start) {
-            return true;
-        } else {
-            return false;
+    public boolean intersect(Annotation a) {
+        return a.getStart() <= this.end && a.getStart() >= this.start
+                || a.getEnd() <= this.end && a.getEnd() >= this.start;
+    }
+
+    public int intersectionSize(Annotation a) {
+        if (a.getStart() <= this.end && a.getStart() >= this.start) {
+            return this.end - a.getStart();
         }
+        else if (a.getEnd() <= this.end && a.getEnd() >= this.start) {
+            return a.getEnd() - this.start;
+        }
+        else {
+            return 0;
+        }
+    }
+
+    public float intersectionPercentage(Annotation a) {
+        return (float) intersectionSize(a) / ( a.getLabel().length() + this.label.length() - intersectionSize(a) );
     }
 }
