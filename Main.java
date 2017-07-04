@@ -9,7 +9,7 @@ public class Main {
 //            System.out.println(all[i]);
 //        }
         Annotation a = all[Integer.parseInt(arg[1])];
-        //System.out.println(testAnnotation(arg[0], a));
+        System.out.println(testAnnotation(arg[0], a));
     }
 
 
@@ -19,7 +19,10 @@ public class Main {
 
         for (int i=0 ; i<th.length ; i++) {
             for (int j=0 ; j<tr.length ; j++) {
-
+                if (th[i].intersecte(tr[j]) == true
+                        && th[i].getType().compareTo(tr[j].getType()) == 0) {
+                    correspTh[i] = tr[j];
+                }
             }
         }
 
