@@ -10,63 +10,72 @@ public class Main {
 //        for (int i=0 ; i<allFile1.length ; i++) {
 //            System.out.println(allFile1[i]);
 //        }
-//        Annotation a = allFile1[Integer.parseInt(arg[2])];
-//        System.out.println(testAnnotation(arg[0], a));
 
         // test all annotations of the file
         // incorrect line : n° line
-        String test = "Incorrect annotations : ";
-        for (int i=0 ; i<allFile1.length ; i++) {
-            Annotation a = allFile1[i];
-            if (testAnnotation(arg[0], a) == false) {
-                test += a.getId() + ", ";
-            }
-        }
-        System.out.println(test);
+//        String test = "Incorrect annotations : ";
+//        for (int i=0 ; i<allFile1.length ; i++) {
+//            if (testAnnotation(arg[0], allFile1[i]) == false) {
+//                test += a.getId() + ", ";
+//            }
+//        }
+//        System.out.println(test);
 
-//        Annotation a = allFile1[Integer.parseInt(arg[2])];
-//        Annotation b = allFile2[Integer.parseInt(arg[3])];
-//        System.out.println("\n" + a.intersectionPercentage(b));
+        //test alignAnnotations
+//        Annotation[] corresp = alignAnnotations(allFile1, allFile2);
+//        for (int i=0 ; i<corresp.length ; i++) {
+//            System.out.println(corresp[i]);
+//        }
 
-        System.out.println("score : "+score(allFile1, allFile2, arg[2]));
+        // test score
+//        System.out.println("Similarity score : "+score(allFile1, allFile2, arg[2]));
     }
 
 
 
+    // returns, depending on the 3rd parameter, the precision, the recall or the F-measure of the similarity score
+    // 3rd parameter :  weakprecision || weakrecall || weakF-measure ||
+    //                  strictprecision || strictrecall || strictF-measure ||
+    //                  weightedprecision || weightedrecall || weightedF-measure
     public static float score(Annotation[] th, Annotation[] tr, String typeScore) {
-        Annotation[] correspTh = alignAnnotations(th, tr);
+        Annotation[] correspTh = alignAnnotations(th, tr); // put in an annotations table the intersecting annotations which are of the same type from both Annotation tables
+        float result = -1;
+        int nbMatches = 0;
 
-        if (typeScore.substring(0, 4).equals("weak")) {
-
-        }
-        if (typeScore.substring(0, 4).equals("stri")) {
-
-        }
-        if (typeScore.substring(0, 4).equals("weig")) {
-
-        }
-
-        if (typeScore.substring(typeScore.length()-6, typeScore.length()).equals("cision")) {
-            int nbMatches = 0;
-            for (int i=0 ; i<correspTh.length ; i++) {
-                if (correspTh[i] != null) {
+        // adjust the matches number depending on the 3rd parameter
+        for (int i=0 ; i<correspTh.length ; i++) {
+            if (correspTh[i] != null) {
+                if (typeScore.substring(0, 4).equals("weak")) {
                     nbMatches++;
                 }
+                if (typeScore.substring(0, 6).equals("strict")) {
+                    if (correspTh[i].getStart() == th[i].getStart()
+                            && correspTh[i].getEnd() == th[i].getEnd()) {
+                        nbMatches++;
+                    }
+                }
+                if (typeScore.substring(0, 8).equals("weighted")) {
+                    nbMatches += correspTh[i].intersectionPercentage(th[i]);
+                }
             }
-            float precision = nbMatches / th.length;
-            return precision;
+        }
+
+        // choose the correct calculation depending on the 3rd parameter
+        if (typeScore.substring(typeScore.length()-9, typeScore.length()).equals("precision")) {
+            result = (float) nbMatches / th.length;
         }
         if (typeScore.substring(typeScore.length()-6, typeScore.length()).equals("recall")) {
-
+            result = (float) nbMatches / tr.length;
         }
-        if (typeScore.substring(typeScore.length()-6, typeScore.length()).equals("easure")) {
-
+        if (typeScore.substring(typeScore.length()-9, typeScore.length()).equals("F-measure")) {
+            result = (float) ( 2 * (nbMatches/th.length) * (nbMatches/tr.length) ) / ( (nbMatches/th.length) + (nbMatches/tr.length) );
         }
 
-        return 0;
+        return result;
     }
 
 
+    // returns an Annotation table containing the intersecting annotations which are of the same type from both Annotation tables
     public static Annotation[] alignAnnotations(Annotation[] th, Annotation[] tr) {
         Annotation[] correspTh = new Annotation[th.length];
 
@@ -83,6 +92,7 @@ public class Main {
     }
 
 
+    // test that an annotation of the file .ann matches with the correct location in the file .txt
     public static boolean testAnnotation(String file, Annotation a) {
         String[] openedFile = ouvreFichier(file.substring(0, file.length() - 4) + ".txt"); // load the file ".txt" which matches whith the file ".ann";
         String text = "";
@@ -96,6 +106,7 @@ public class Main {
     }
 
 
+    // load all the annotations of the file in an Annotation table
     public static Annotation[] loadAnnotations(String file) {
         String[] openedFile = ouvreFichier(file);
         Annotation[] annotations = new Annotation[openedFile.length];

@@ -50,11 +50,13 @@ public class Annotation{
         return id + " : " + label + " (" + start + "-" + end + ")";
     }
 
+    // check if the annotation intersects with the one in parameter
     public boolean intersect(Annotation a) {
         return a.getStart() <= this.end && a.getStart() >= this.start
                 || a.getEnd() <= this.end && a.getEnd() >= this.start;
     }
 
+    // returns the size of the segment common to both annotations
     public int intersectionSize(Annotation a) {
         if (a.getStart() <= this.end && a.getStart() >= this.start) {
             return this.end - a.getStart();
@@ -67,6 +69,7 @@ public class Annotation{
         }
     }
 
+    // returns the persentage of the intersection size
     public float intersectionPercentage(Annotation a) {
         return (float) intersectionSize(a) / ( a.getLabel().length() + this.label.length() - intersectionSize(a) );
     }
