@@ -1,12 +1,17 @@
 import java.io.*;
+import org.jdom2.*;
+import org.jdom2.input.*;
+import org.jdom2.filter.*;
+import java.util.List;
+import java.util.Iterator;
 
 public class Main {
 
-    public static void main(String[] arg) {
+    public static void main(String[] arg) throws JDOMException, IOException {
 
         // load annotations of the file in the first parameter
-        Annotation[] allFile1 = loadAnnotations(arg[0]);
-        Annotation[] allFile2 = loadAnnotations(arg[1]);
+//        Annotation[] allFile1 = loadAnnotations(arg[0]);
+//        Annotation[] allFile2 = loadAnnotations(arg[1]);
 //        for (int i=0 ; i<allFile1.length ; i++) {
 //            System.out.println(allFile1[i]);
 //        }
@@ -15,7 +20,8 @@ public class Main {
         // incorrect line : n° line
 //        String test = "Incorrect annotations : ";
 //        for (int i=0 ; i<allFile1.length ; i++) {
-//            if (testAnnotation(arg[0], allFile1[i]) == false) {
+//            Annotation a = allFile1[i];
+//            if (testAnnotation(arg[0], a) == false) {
 //                test += a.getId() + ", ";
 //            }
 //        }
@@ -29,8 +35,29 @@ public class Main {
 
         // test score
 //        System.out.println("Similarity score : "+score(allFile1, allFile2, arg[2]));
+
+        // test jdom
+        SAXBuilder sxb = new SAXBuilder();
+        Document document = sxb.build(new File("test.xml"));
+        Element root = document.getRootElement();
+        String t = root.getText();
+        System.out.println(annFromXML(root, t));
     }
 
+
+
+    public static String annFromXML(Element node, String t) {
+        List tags = node.getChildren();
+        Iterator i = tags.iterator();
+
+        while (i.hasNext()) {
+            Element current = (Element)i.next();
+            t += current.getText();
+            annFromXML(current, t);
+        }
+
+        return t;
+    }
 
 
     // returns, depending on the 3rd parameter, the precision, the recall or the F-measure of the similarity score
