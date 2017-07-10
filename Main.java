@@ -36,27 +36,36 @@ public class Main {
         // test score
 //        System.out.println("Similarity score : "+score(allFile1, allFile2, arg[2]));
 
-        // test jdom
+        // test annFromXML
         SAXBuilder sxb = new SAXBuilder();
         Document document = sxb.build(new File("test.xml"));
         Element root = document.getRootElement();
-        String t = root.getText();
-        System.out.println(annFromXML(root, t));
+        String t = "";
+        Annotation[] a = new Annotation[0];
+        Annotation[] ann = annFromXML(root, t, 0, a);
+        for (int i=0 ; i<ann.length ; i++) {
+            System.out.println(ann[i]);
+        }
     }
 
 
 
-    public static String annFromXML(Element node, String t) {
+    public static Annotation[] annFromXML(Element node, String t, int id, Annotation[] a) {
+        id++;
+        String n = "T" + id;
+        Annotation[] b = new Annotation[a.length+1];
+        b[b.length-1] = new Annotation(n, "unknown", t.length(), t.length() + node.getText().length(), node.getText());
+        t += node.getText();
+
         List tags = node.getChildren();
         Iterator i = tags.iterator();
 
         while (i.hasNext()) {
             Element current = (Element)i.next();
-            t += current.getText();
-            annFromXML(current, t);
+            a = annFromXML(current, t, id, b);
         }
 
-        return t;
+        return a;
     }
 
 
