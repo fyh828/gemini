@@ -47,7 +47,7 @@ public class Annotation{
     }
 
     public String toString(){
-        return id + " : " + label + " (" + start + "-" + end + ")";
+        return id + " : " + label + " (" + type + " ; " + start + "-" + end + ")";
     }
 
     // check if the annotation intersects with the one in parameter

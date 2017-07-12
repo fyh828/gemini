@@ -39,33 +39,36 @@ public class Main {
         // test annFromXML
         SAXBuilder sxb = new SAXBuilder();
         Document document = sxb.build(new File("test.xml"));
-        Element root = document.getRootElement();
-        String t = "";
-        Annotation[] a = new Annotation[0];
-        Annotation[] ann = annFromXML(root, t, 0, a);
-        for (int i=0 ; i<ann.length ; i++) {
-            System.out.println(ann[i]);
+        Annotation[] ann = annFromXML(document.getRootElement(), document.getRootElement().getValue(), new Annotation[0]);
+        for (int i=1 ; i<ann.length ; i++) {
+            System.out.println("- " + ann[i] + ".");
         }
     }
 
 
 
-    public static Annotation[] annFromXML(Element node, String t, int id, Annotation[] a) {
-        id++;
-        String n = "T" + id;
+    // create the Annotation's table corresponding to the the XML file
+    public static Annotation[] annFromXML(Element node, String text, Annotation[] a) {
+        // update id
+        String id = "T" + (a.length);
+
+        // add a cell to the table
         Annotation[] b = new Annotation[a.length+1];
-        b[b.length-1] = new Annotation(n, "unknown", t.length(), t.length() + node.getText().length(), node.getText());
-        t += node.getText();
+        for (int i=0 ; i<a.length ; i++) {
+            b[i] = a[i];
+        }
+
+        // add a new Annotation in the last cell of the table
+        b[b.length-1] = new Annotation(id, node.getName(), text.indexOf(node.getValue()), text.indexOf(node.getValue()) + node.getValue().length(), node.getValue());
 
         List tags = node.getChildren();
         Iterator i = tags.iterator();
-
         while (i.hasNext()) {
             Element current = (Element)i.next();
-            a = annFromXML(current, t, id, b);
+            b = annFromXML(current, text, b);
         }
 
-        return a;
+        return b;
     }
 
 
