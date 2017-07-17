@@ -52,17 +52,23 @@ public class Annotation{
 
     // check if the annotation intersects with the one in parameter
     public boolean intersect(Annotation a) {
-        return a.getStart() <= this.end && a.getStart() >= this.start
-                || a.getEnd() <= this.end && a.getEnd() >= this.start;
+        return a.getStart() >= this.start && a.getStart() <= this.end
+                || this.start >= a.getStart() && this.start <= a.getEnd();
     }
 
     // returns the size of the segment common to both annotations
     public int intersectionSize(Annotation a) {
-        if (a.getStart() <= this.end && a.getStart() >= this.start) {
+        if (a.getStart() <= this.start && a.getEnd() >= this.start && a.getEnd() <= this.end) {
+            return a.getEnd() - this.start;
+        }
+        else if (a.getStart() >= this.start && a.getEnd() <= this.end) {
+            return a.getEnd() - a.getStart();
+        }
+        else if (a.getStart() >= this.start && a.getStart() <= this.end && a.getEnd() >= this.end) {
             return this.end - a.getStart();
         }
-        else if (a.getEnd() <= this.end && a.getEnd() >= this.start) {
-            return a.getEnd() - this.start;
+        else if (a.getStart() <= this.start && a.getEnd() >= this.end) {
+            return this.end - this.start;
         }
         else {
             return 0;

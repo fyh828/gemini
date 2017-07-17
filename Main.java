@@ -10,8 +10,8 @@ public class Main {
     public static void main(String[] arg) throws JDOMException, IOException {
 
         // load annotations of the file in the first parameter
-//        Annotation[] allFile1 = loadAnnotations(arg[0]);
-//        Annotation[] allFile2 = loadAnnotations(arg[1]);
+        Annotation[] allFile1 = loadAnnotations(arg[0]);
+        Annotation[] allFile2 = loadAnnotations(arg[1]);
 //        for (int i=0 ; i<allFile1.length ; i++) {
 //            System.out.println(allFile1[i]);
 //        }
@@ -28,21 +28,26 @@ public class Main {
 //        System.out.println(test);
 
         //test alignAnnotations
-//        Annotation[] corresp = alignAnnotations(allFile1, allFile2);
-//        for (int i=0 ; i<corresp.length ; i++) {
-//            System.out.println(corresp[i]);
-//        }
+        float[][] corresp = alignAnnotations(allFile1, allFile2);
+        String a = "";
+        for (int i=0 ; i<corresp.length ; i++) {
+            for (int j=0 ; j<corresp[i].length ; j++) {
+                a += corresp[i][j] + " | ";
+            }
+            a += "\n";
+        }
+        System.out.println(a);
 
         // test score
 //        System.out.println("Similarity score : "+score(allFile1, allFile2, arg[2]));
 
         // test annFromXML
-        SAXBuilder sxb = new SAXBuilder();
-        Document document = sxb.build(new File("test.xml"));
-        Annotation[] ann = annFromXML(document.getRootElement(), document.getRootElement().getValue(), new Annotation[0]);
-        for (int i=1 ; i<ann.length ; i++) {
-            System.out.println("- " + ann[i] + ".");
-        }
+//        SAXBuilder sxb = new SAXBuilder();
+//        Document document = sxb.build(new File(arg[0]));
+//        Annotation[] ann = annFromXML(document.getRootElement(), document.getRootElement().getValue(), new Annotation[0]);
+//        for (int i=0 ; i<ann.length ; i++) {
+//            System.out.println("- " + ann[i] + ".");
+//        }
     }
 
 
@@ -76,58 +81,55 @@ public class Main {
     // 3rd parameter :  weakprecision || weakrecall || weakF-measure ||
     //                  strictprecision || strictrecall || strictF-measure ||
     //                  weightedprecision || weightedrecall || weightedF-measure
-    public static float score(Annotation[] th, Annotation[] tr, String typeScore) {
-        Annotation[] correspTh = alignAnnotations(th, tr); // put in an annotations table the intersecting annotations which are of the same type from both Annotation tables
-        float result = -1;
-        int nbMatches = 0;
-
-        // adjust the matches number depending on the 3rd parameter
-        for (int i=0 ; i<correspTh.length ; i++) {
-            if (correspTh[i] != null) {
-                if (typeScore.substring(0, 4).equals("weak")) {
-                    nbMatches++;
-                }
-                if (typeScore.substring(0, 6).equals("strict")) {
-                    if (correspTh[i].getStart() == th[i].getStart()
-                            && correspTh[i].getEnd() == th[i].getEnd()) {
-                        nbMatches++;
-                    }
-                }
-                if (typeScore.substring(0, 8).equals("weighted")) {
-                    nbMatches += correspTh[i].intersectionPercentage(th[i]);
-                }
-            }
-        }
-
-        // choose the correct calculation depending on the 3rd parameter
-        if (typeScore.substring(typeScore.length()-9, typeScore.length()).equals("precision")) {
-            result = (float) nbMatches / th.length;
-        }
-        if (typeScore.substring(typeScore.length()-6, typeScore.length()).equals("recall")) {
-            result = (float) nbMatches / tr.length;
-        }
-        if (typeScore.substring(typeScore.length()-9, typeScore.length()).equals("F-measure")) {
-            result = (float) ( 2 * (nbMatches/th.length) * (nbMatches/tr.length) ) / ( (nbMatches/th.length) + (nbMatches/tr.length) );
-        }
-
-        return result;
-    }
+//    public static float score(Annotation[] th, Annotation[] tr, String typeScore) {
+//        Annotation[] correspTh = alignAnnotations(th, tr); // put in an annotations table the intersecting annotations which are of the same type from both Annotation tables
+//        float result = -1;
+//        int nbMatches = 0;
+//
+//        // adjust the matches number depending on the 3rd parameter
+//        for (int i=0 ; i<correspTh.length ; i++) {
+//            if (correspTh[i] != null) {
+//                if (typeScore.substring(0, 4).equals("weak")) {
+//                    nbMatches++;
+//                }
+//                if (typeScore.substring(0, 6).equals("strict")) {
+//                    if (correspTh[i].getStart() == th[i].getStart()
+//                            && correspTh[i].getEnd() == th[i].getEnd()) {
+//                        nbMatches++;
+//                    }
+//                }
+//                if (typeScore.substring(0, 8).equals("weighted")) {
+//                    nbMatches += correspTh[i].intersectionPercentage(th[i]);
+//                }
+//            }
+//        }
+//
+//        // choose the correct calculation depending on the 3rd parameter
+//        if (typeScore.substring(typeScore.length()-9, typeScore.length()).equals("precision")) {
+//            result = (float) nbMatches / th.length;
+//        }
+//        if (typeScore.substring(typeScore.length()-6, typeScore.length()).equals("recall")) {
+//            result = (float) nbMatches / tr.length;
+//        }
+//        if (typeScore.substring(typeScore.length()-9, typeScore.length()).equals("F-measure")) {
+//            result = (float) ( 2 * (nbMatches/th.length) * (nbMatches/tr.length) ) / ( (nbMatches/th.length) + (nbMatches/tr.length) );
+//        }
+//
+//        return result;
+//    }
 
 
     // returns an Annotation table containing the intersecting annotations which are of the same type from both Annotation tables
-    public static Annotation[] alignAnnotations(Annotation[] th, Annotation[] tr) {
-        Annotation[] correspTh = new Annotation[th.length];
+    public static float[][] alignAnnotations(Annotation[] th, Annotation[] tr) {
+        float[][] t = new float[th.length][tr.length];
 
         for (int i=0 ; i<th.length ; i++) {
             for (int j=0 ; j<tr.length ; j++) {
-                if (th[i].intersect(tr[j]) == true
-                        && th[i].getType().equals(tr[j].getType())) {
-                    correspTh[i] = tr[j];
-                }
+                t[i][j] = th[i].intersectionPercentage(tr[j]);
             }
         }
 
-        return correspTh;
+        return t;
     }
 
 
