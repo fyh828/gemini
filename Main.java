@@ -28,9 +28,15 @@ public class Main {
 //        System.out.println(test);
 
         //test alignAnnotations
-        Annotation[] corresp = alignAnnotations(allFile1, allFile2, arg[2]);
+        Annotation[][] corresp = alignAnnotations(allFile1, allFile2, arg[2]);
         for (int i=0 ; i<corresp.length ; i++) {
-            System.out.println(corresp[i]);
+            System.out.println("correspTh " + (i+1) + " :");
+            for (int j=0 ; j<corresp[i].length ; j++) {
+                if (corresp[i][j] != null) {
+                    System.out.println(corresp[i][j]);
+                }
+            }
+            System.out.println("\n");
         }
 
         // test score
@@ -77,24 +83,26 @@ public class Main {
     //                  strictprecision || strictrecall || strictF-measure ||
     //                  weightedprecision || weightedrecall || weightedF-measure
     public static float score(Annotation[] th, Annotation[] tr, String typeScore, String typeAlignment) {
-        Annotation[] correspTh = alignAnnotations(th, tr, typeAlignment); // put in an annotations table the intersecting annotations which are of the same type from both Annotation tables
+        Annotation[][] correspTh = alignAnnotations(th, tr, typeAlignment); // put in an annotations table the intersecting annotations which are of the same type from both Annotation tables
         float result = -1;
         int nbMatches = 0;
 
         // adjust the matches number depending on the 3rd parameter
         for (int i=0 ; i<correspTh.length ; i++) {
-            if (correspTh[i] != null) {
-                if (typeScore.substring(0, 4).equals("weak")) {
-                    nbMatches++;
-                }
-                if (typeScore.substring(0, 6).equals("strict")) {
-                    if (correspTh[i].getStart() == th[i].getStart()
-                            && correspTh[i].getEnd() == th[i].getEnd()) {
+            for (int j=0 ; i<correspTh[i].length ; j++) {
+                if (correspTh[i][j] != null) {
+                    if (typeScore.substring(0, 4).equals("weak")) {
                         nbMatches++;
                     }
-                }
-                if (typeScore.substring(0, 8).equals("weighted")) {
-                    nbMatches += correspTh[i].intersectionPercentage(th[i]);
+                    if (typeScore.substring(0, 6).equals("strict")) {
+                        if (correspTh[i][j].getStart() == th[i].getStart()
+                                && correspTh[i][j].getEnd() == th[i].getEnd()) {
+                            nbMatches++;
+                        }
+                    }
+                    if (typeScore.substring(0, 8).equals("weighted")) {
+                        nbMatches += correspTh[i][j].intersectionPercentage(th[i]);
+                    }
                 }
             }
         }
@@ -114,21 +122,28 @@ public class Main {
     }
 
 
-    // returns an Annotation table containing the intersecting annotations which are of the same type from both Annotation tables
-    public static Annotation[] alignAnnotations(Annotation[] th, Annotation[] tr, String algo) {
-        Annotation[] correspTh = new Annotation[th.length];
+    // returns an Annotation table depending on the parameter "algo"
+    public static Annotation[][] alignAnnotations(Annotation[] th, Annotation[] tr, String algo) {
+        Annotation[][] correspTh = new Annotation[th.length][tr.length];
 
+        // align one annotation with several depending on the annotations intersection and types
         if (algo.equals("multiple")) {
             for (int i=0 ; i<th.length ; i++) {
                 for (int j=0 ; j<tr.length ; j++) {
                     if (th[i].intersect(tr[j]) == true
                             && th[i].getType().equals(tr[j].getType())) {
-                        correspTh[i] = tr[j];
+                        for (int c=0 ; c<tr.length ; c++) {
+                            if (correspTh[i][c] == null) {
+                                correspTh[i][c] = tr[j];
+                                c = tr.length;
+                            }
+                        }
                     }
                 }
             }
         }
 
+        // align one annotation with one other depending on the annotations intersection without including the types
         else if (algo.equals("greedy")) {
             // matrix creation
             float[][] t = new float[th.length][tr.length];
@@ -154,9 +169,9 @@ public class Main {
                 }
 
                 // add the match in the matches' table
-                correspTh[imax] = tr[jmax];
+                correspTh[imax][0] = tr[jmax];
 
-                // delete the column and the line corresponding with the added annotation
+                // "delete" the column and the line corresponding with the added annotation
                 for (int i=0 ; i<t.length ; i++) {
                     t[i][jmax] = 0;
                 }
