@@ -1,3 +1,7 @@
+/**
+ * The {@code Annotation} class an annotation of a word or a word group in a text.
+ */
+
 public class Annotation{
 
     public String id;
@@ -50,13 +54,24 @@ public class Annotation{
         return id + " : " + label + " (" + type + " ; " + start + "-" + end + ")";
     }
 
-    // check if the annotation intersects with the one in parameter
+    /**
+     * Check if the annotation intersects ith the one in parameter.
+     *
+     * @param a the annotation to compare with
+     * @return {@code true} if there is an intersection in common between the two annotations
+     *         {@code false} otherwise
+     */
     public boolean intersect(Annotation a) {
         return a.getStart() >= this.start && a.getStart() <= this.end
                 || this.start >= a.getStart() && this.start <= a.getEnd();
     }
 
-    // returns the size of the segment common to both annotations
+    /**
+     * Returns the size of the segment common to both annotations.
+     *
+     * @param a the annotation to compare with
+     * @return the size of the segment common to both annotations
+     */
     public int intersectionSize(Annotation a) {
         if (a.getStart() <= this.start && a.getEnd() >= this.start && a.getEnd() <= this.end) {
             return a.getEnd() - this.start;
@@ -75,7 +90,12 @@ public class Annotation{
         }
     }
 
-    // returns the persentage of the intersection size
+    /**
+     * Returns the persentage of the intersection size.
+     *
+     * @param a the annotation to compare with
+     * @return the persentage of the intersection size
+     */
     public float intersectionPercentage(Annotation a) {
         return (float) intersectionSize(a) / ( a.getLabel().length() + this.label.length() - intersectionSize(a) );
     }

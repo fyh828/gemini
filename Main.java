@@ -1,26 +1,127 @@
 import java.io.*;
+import edu.princeton.cs.algs4.*;
 import org.jdom2.*;
 import org.jdom2.input.*;
 import org.jdom2.filter.*;
-import java.util.List;
-import java.util.Iterator;
+import java.util.*;
 
 public class Main {
 
     public static void main(String[] arg) throws JDOMException, IOException {
 
+        String bratfile1 = "";
+        String bratfile2 = "";
+        String xmlfile1 = "";
+        String xmlfile2 = "";
+        String typeScore = "";
+        String typeAlignment = "multiple";
+
+        // scan the arguments
+        for (int i=0 ; i<arg.length ; i++) {
+            if (arg[i].equals("-bratfile1")) {
+                bratfile1 = arg[i+1];
+            }
+            else if (arg[i].equals("-xmlfile1")) {
+                xmlfile1 = arg[i+1];
+            }
+
+            if (arg[i].equals("-bratfile2")) {
+                bratfile2 = arg[i+1];
+            }
+            else if (arg[i].equals("-xmlfile2")) {
+                xmlfile2 = arg[i+1];
+            }
+
+            if (arg[i].equals("weakprecision") || arg[i].equals("weakrecall") || arg[i].equals("weakF-measure")
+                    || arg[i].equals("strictprecision") || arg[i].equals("strictrecall") || arg[i].equals("strictF-measure")
+                    || arg[i].equals("weightedprecision") || arg[i].equals("weightedrecall") || arg[i].equals("weightedF-measure")) {
+                typeScore = arg[i];
+            }
+
+            if (arg[i].equals("multiple") || arg[i].equals("greedy") || arg[i].equals("maxmatching")) {
+                typeAlignment = arg[i];
+            }
+
+            if (arg[i].equals("--help")) {
+                System.out.println("To indicate files to compare :" +
+                        "\n -bratfile1  : followed by first file's name (.ann)" +
+                        "\n -xmlfile1    : followed by first file's name (.xml)" +
+                        "\n -bratfile2   : followed by second file's name (.ann)" +
+                        "\n -xmlfile2    : followed by second file's name (.xml)" +
+                        "\n" +
+                        "\nTo indicate score type :" +
+                        "\n weakprecision" +
+                        "\n strictprecision" +
+                        "\n weightedprecision" +
+                        "\n weakrecall" +
+                        "\n strictrecall" +
+                        "\n weightedrecall" +
+                        "\n weakF-measure" +
+                        "\n strictF-measure" +
+                        "\n weightedF-measure" +
+                        "\n" +
+                        "\nTo indicate alignment type :" +
+                        "\n multiple (default value)" +
+                        "\n greedy" +
+                        "\n maxmatching");
+            }
+        }
+
+        // display the similarity score
+        if ((!bratfile1.equals("") || !xmlfile1.equals("")) && (!bratfile2.equals("") || !xmlfile2.equals(""))) {
+            SAXBuilder sxb = new SAXBuilder();
+            Annotation[] file1;
+            Annotation[] file2;
+
+            if (!bratfile1.equals("")) {
+                file1 = loadAnnotations(bratfile1);
+            } else {
+                Document doc1 = sxb.build(new File(xmlfile1));
+                file1 = annFromXML(doc1.getRootElement(), doc1.getRootElement().getValue(), new Annotation[0]);
+            }
+
+            if (!bratfile2.equals("")) {
+                file2 = loadAnnotations(bratfile2);
+            } else {
+                Document doc2 = sxb.build(new File(xmlfile2));
+                file2 = annFromXML(doc2.getRootElement(), doc2.getRootElement().getValue(), new Annotation[0]);
+            }
+
+            if (!typeScore.equals("")) {
+                System.out.println("Similarity score : " + score(file1, file2, typeScore, typeAlignment));
+            } else {
+                System.out.println("Similarity score (weak precision) : " + score(file1, file2, "weakprecision", typeAlignment)
+                        + "\nSimilarity score (strict precision) : " + score(file1, file2, "strictprecision", typeAlignment)
+                        + "\nSimilarity score (weighted precision) : " + score(file1, file2, "weightedprecision", typeAlignment)
+                        + "\nSimilarity score (weak recall) : " + score(file1, file2, "weakrecall", typeAlignment)
+                        + "\nSimilarity score (strict recall) : " + score(file1, file2, "strictrecall", typeAlignment)
+                        + "\nSimilarity score (weighted recall) : " + score(file1, file2, "weightedrecall", typeAlignment)
+                        + "\nSimilarity score (weak F-measure) : " + score(file1, file2, "weakF-measure", typeAlignment)
+                        + "\nSimilarity score (strict F-measure) : " + score(file1, file2, "strictF-measure", typeAlignment)
+                        + "\nSimilarity score (weighted F-measure) : " + score(file1, file2, "weightedF-measure", typeAlignment));
+            }
+        }
+
+        // or deal with missing files
+        else if (!bratfile1.equals("") || !xmlfile1.equals("") && bratfile2.equals("") && xmlfile2.equals("")) {
+            System.out.println("Second file is missing : -bratfile2 or -xmlfile2 to indicate it");
+        }
+        else if (bratfile1.equals("") && xmlfile1.equals("") && !bratfile2.equals("") || !xmlfile2.equals("")) {
+            System.out.println("First file is missing : -bratfile1 or -xmlfile1 to indicate it");
+        }
+
         // load annotations of the file in the first parameter
-        Annotation[] allFile1 = loadAnnotations(arg[0]);
-        Annotation[] allFile2 = loadAnnotations(arg[1]);
-//        for (int i=0 ; i<allFile1.length ; i++) {
-//            System.out.println(allFile1[i]);
+//        Annotation[] f1 = loadAnnotations(arg[0]);
+//        Annotation[] f2 = loadAnnotations(arg[1]);
+//        for (int i=0 ; i<file1.length ; i++) {
+//            System.out.println(file1[i]);
 //        }
 
         // test all annotations of the file
         // incorrect line : n° line
 //        String test = "Incorrect annotations : ";
-//        for (int i=0 ; i<allFile1.length ; i++) {
-//            Annotation a = allFile1[i];
+//        for (int i=0 ; i<file1.length ; i++) {
+//            Annotation a = file1[i];
 //            if (testAnnotation(arg[0], a) == false) {
 //                test += a.getId() + ", ";
 //            }
@@ -28,19 +129,19 @@ public class Main {
 //        System.out.println(test);
 
         //test alignAnnotations
-        Annotation[][] corresp = alignAnnotations(allFile1, allFile2, arg[2]);
-        for (int i=0 ; i<corresp.length ; i++) {
-            System.out.println("correspTh " + (i+1) + " :");
-            for (int j=0 ; j<corresp[i].length ; j++) {
-                if (corresp[i][j] != null) {
-                    System.out.println(corresp[i][j]);
-                }
-            }
-            System.out.println("\n");
-        }
+//        Annotation[][] corresp = alignAnnotations(f1, f2, arg[2]);
+//        for (int i=0 ; i<corresp.length ; i++) {
+//            System.out.println("correspTh " + (i+1) + " :");
+//            for (int j=0 ; j<corresp[i].length ; j++) {
+//                if (corresp[i][j] != null) {
+//                    System.out.println(corresp[i][j]);
+//                }
+//            }
+//            System.out.println("\n");
+//        }
 
         // test score
-//        System.out.println("Similarity score : "+score(allFile1, allFile2, arg[2]));
+//        System.out.println("Similarity score : " + score(file1, file2, arg[2], "greedy"));
 
         // test annFromXML
 //        SAXBuilder sxb = new SAXBuilder();
@@ -53,54 +154,38 @@ public class Main {
 
 
 
-    // create the Annotation's table corresponding to the the XML file
-    public static Annotation[] annFromXML(Element node, String text, Annotation[] a) {
-        // update id
-        String id = "T" + (a.length);
-
-        // add a cell to the table
-        Annotation[] b = new Annotation[a.length+1];
-        for (int i=0 ; i<a.length ; i++) {
-            b[i] = a[i];
-        }
-
-        // add a new Annotation in the last cell of the table
-        b[b.length-1] = new Annotation(id, node.getName(), text.indexOf(node.getValue()), text.indexOf(node.getValue()) + node.getValue().length(), node.getValue());
-
-        List tags = node.getChildren();
-        Iterator i = tags.iterator();
-        while (i.hasNext()) {
-            Element current = (Element)i.next();
-            b = annFromXML(current, text, b);
-        }
-
-        return b;
-    }
-
-
-    // returns, depending on the 3rd parameter, the precision, the recall or the F-measure of the similarity score
-    // 3rd parameter :  weakprecision || weakrecall || weakF-measure ||
-    //                  strictprecision || strictrecall || strictF-measure ||
-    //                  weightedprecision || weightedrecall || weightedF-measure
+    /**
+     * Calculate a similarity score relating to the annotations between two texts.
+     *
+     * @param th the annotations table of the first text
+     * @param tr the annotations table of the second text
+     * @param typeScore the score type to choose between these paameters :
+     *                  weakprecision       |   weakrecall      |   weakF-measure
+     *                  strcitprecision     |   strictrecall    |   strictF-measure
+     *                  weightedprecision   |   weightedrecall  |   weightedF-measure
+     * @param typeAlignment the alignment type to choose between these parameters :
+     *                      multiple | greedy | maxmatching
+     * @return a similarity score between 0 and 1.
+     */
     public static float score(Annotation[] th, Annotation[] tr, String typeScore, String typeAlignment) {
-        Annotation[][] correspTh = alignAnnotations(th, tr, typeAlignment); // put in an annotations table the intersecting annotations which are of the same type from both Annotation tables
+        Annotation[][] correspTh = alignAnnotations(th, tr, typeAlignment);
         float result = -1;
         int nbMatches = 0;
 
         // adjust the matches number depending on the 3rd parameter
         for (int i=0 ; i<correspTh.length ; i++) {
-            for (int j=0 ; i<correspTh[i].length ; j++) {
+            for (int j=0 ; j<correspTh[i].length ; j++) {
                 if (correspTh[i][j] != null) {
                     if (typeScore.substring(0, 4).equals("weak")) {
                         nbMatches++;
                     }
-                    if (typeScore.substring(0, 6).equals("strict")) {
+                    else if (typeScore.substring(0, 6).equals("strict")) {
                         if (correspTh[i][j].getStart() == th[i].getStart()
                                 && correspTh[i][j].getEnd() == th[i].getEnd()) {
                             nbMatches++;
                         }
                     }
-                    if (typeScore.substring(0, 8).equals("weighted")) {
+                    else if (typeScore.substring(0, 8).equals("weighted")) {
                         nbMatches += correspTh[i][j].intersectionPercentage(th[i]);
                     }
                 }
@@ -111,10 +196,10 @@ public class Main {
         if (typeScore.substring(typeScore.length()-9, typeScore.length()).equals("precision")) {
             result = (float) nbMatches / th.length;
         }
-        if (typeScore.substring(typeScore.length()-6, typeScore.length()).equals("recall")) {
+        else if (typeScore.substring(typeScore.length()-6, typeScore.length()).equals("recall")) {
             result = (float) nbMatches / tr.length;
         }
-        if (typeScore.substring(typeScore.length()-9, typeScore.length()).equals("F-measure")) {
+        else if (typeScore.substring(typeScore.length()-9, typeScore.length()).equals("F-measure")) {
             result = (float) ( 2 * (nbMatches/th.length) * (nbMatches/tr.length) ) / ( (nbMatches/th.length) + (nbMatches/tr.length) );
         }
 
@@ -122,22 +207,44 @@ public class Main {
     }
 
 
-    // returns an Annotation table depending on the parameter "algo"
+    /**
+     * Align the annotations of two texts, depending on the chosen algorithm.
+     *
+     * @param th the annotations table of the first text
+     * @param tr the annotations table of the second text
+     * @param algo the alignment type to choose between the following algorithms :
+     *             multiple |   greedy  |   maxmatching
+     * @return an annotations table with the annotations of {@code tr} in the cells corresponding with the annotations of {@code th}
+     */
     public static Annotation[][] alignAnnotations(Annotation[] th, Annotation[] tr, String algo) {
         Annotation[][] correspTh = new Annotation[th.length][tr.length];
 
         // align one annotation with several depending on the annotations intersection and types
-        if (algo.equals("multiple")) {
+        if (algo.equals("multiple") || algo.equals("maxmatching")) {
+            Graph g = new Graph(th.length + tr.length);
+
             for (int i=0 ; i<th.length ; i++) {
                 for (int j=0 ; j<tr.length ; j++) {
                     if (th[i].intersect(tr[j]) == true
                             && th[i].getType().equals(tr[j].getType())) {
-                        for (int c=0 ; c<tr.length ; c++) {
-                            if (correspTh[i][c] == null) {
-                                correspTh[i][c] = tr[j];
-                                c = tr.length;
+                        if (algo.equals("multiple")) {
+                            for (int c=0 ; c<tr.length ; c++) {
+                                if (correspTh[i][c] == null) {
+                                    correspTh[i][c] = tr[j];
+                                    c = tr.length;
+                                }
                             }
                         }
+                        g.addEdge(i, th.length+j);
+                    }
+                }
+            }
+
+            if (algo.equals("maxmatching")) {
+                BipartiteMatching b = new BipartiteMatching(g);
+                for (int v=0 ; v<th.length ; v++) {
+                    if (b.mate(v) != -1) {
+                        correspTh[v][0] = tr[b.mate(v)-th.length];
                     }
                 }
             }
@@ -181,15 +288,18 @@ public class Main {
             }
         }
 
-//        else if (algo.equals("maximum matching")) {
-//
-//        }
-
         return correspTh;
     }
 
 
-    // test that an annotation of the file .ann matches with the correct location in the file .txt
+    /**
+     * Test that an annotation of the file .ann matches with the correct location in the file .txt.
+     *
+     * @param file the file containing the annotations (.ann)
+     * @param a the annotation to test
+     * @return {@code true} if the {@code start} and the {@code end} of the annotation refer to the right word or word group in the text
+     *          {@code false} otherwise
+     */
     public static boolean testAnnotation(String file, Annotation a) {
         String[] openedFile = ouvreFichier(file.substring(0, file.length() - 4) + ".txt"); // load the file ".txt" which matches whith the file ".ann";
         String text = "";
@@ -203,7 +313,12 @@ public class Main {
     }
 
 
-    // load all the annotations of the file in an Annotation table
+    /**
+     * Load all the annotations of the file's text.
+     *
+     * @param file the file which contains the text
+     * @return an annotations table with all the annoteations of the file
+     */
     public static Annotation[] loadAnnotations(String file) {
         String[] openedFile = ouvreFichier(file);
         Annotation[] annotations = new Annotation[openedFile.length];
@@ -220,6 +335,45 @@ public class Main {
     }
 
 
+    /**
+     * Create the Annotation's table corresponding to the XML file.
+     * It's a recursive function which will go through all tags of the XML file.
+     *
+     * @param node the xml tag
+     * @param text the entire text of the xml file
+     * @param a the annotations table in which the function will add a new annotation in each new tag
+     * @return the Annotation's table corresponding to the the XML file
+     */
+    public static Annotation[] annFromXML(Element node, String text, Annotation[] a) {
+        // update id
+        String id = "T" + (a.length);
+
+        // add a cell to the table
+        Annotation[] b = new Annotation[a.length+1];
+        for (int i=0 ; i<a.length ; i++) {
+            b[i] = a[i];
+        }
+
+        // add a new Annotation in the last cell of the table
+        b[b.length-1] = new Annotation(id, node.getName(), text.indexOf(node.getValue()), text.indexOf(node.getValue()) + node.getValue().length(), node.getValue());
+
+        List tags = node.getChildren();
+        Iterator i = tags.iterator();
+        while (i.hasNext()) {
+            Element current = (Element)i.next();
+            b = annFromXML(current, text, b);
+        }
+
+        return b;
+    }
+
+
+    /**
+     * Load a file
+     *
+     * @param fichier the file to load
+     * @return a String containing the file's text
+     */
     public static String[] ouvreFichier(String fichier){
         int nbLignes;
         String ligne;
