@@ -118,10 +118,10 @@ public class Main {
                 System.out.println("\n\nAlignment table :");
                 Annotation[][] corresp = alignAnnotations(file1, file2, typeAlignment);
                 for (int i=0 ; i<corresp.length ; i++) {
-                    System.out.println("\nTh : " + file1[i] + " :");
+                    System.out.println("\n[TH] " + file1[i] + " :");
                     for (int j=0 ; j<corresp[i].length ; j++) {
                         if (corresp[i][j] != null) {
-                            System.out.println("> Tr : " + corresp[i][j]);
+                            System.out.println("> [TR] " + corresp[i][j]);
                         }
                     }
                 }
@@ -207,18 +207,7 @@ public class Main {
         for (int i=0 ; i<correspTh.length ; i++) {
             for (int j=0 ; j<correspTh[i].length ; j++) {
                 if (correspTh[i][j] != null) {
-                    if (typeScore.substring(0, 4).equals("weak")) {
-                        nbMatches++;
-                    }
-                    else if (typeScore.substring(0, 6).equals("strict")) {
-                        if (correspTh[i][j].getStart() == th[i].getStart()
-                                && correspTh[i][j].getEnd() == th[i].getEnd()) {
-                            nbMatches++;
-                        }
-                    }
-                    else if (typeScore.substring(0, 8).equals("weighted")) {
-                        nbMatches += correspTh[i][j].intersectionPercentage(th[i]);
-                    }
+                    nbMatches += matchingAnnotationScore(th[i], correspTh[i][j], typeScore);
                 }
             }
         }
@@ -232,6 +221,9 @@ public class Main {
         }
         else if (typeScore.substring(typeScore.length()-9, typeScore.length()).equals("F-measure")) {
             result = (float) ( 2 * (nbMatches/th.length) * (nbMatches/tr.length) ) / ( (nbMatches/th.length) + (nbMatches/tr.length) );
+        }
+        else {
+            System.out.println("You didn't specify the score type you want, or you chose an score type which doesn't exist.");
         }
 
         return result;
@@ -250,7 +242,7 @@ public class Main {
     public static float matchingAnnotationScore(Annotation ann1, Annotation ann2, String typeScore) {
         float result = 0;
 
-        if (ann1.intersect(ann2)) {
+        if (ann1.intersect(ann2) && ann1.getType().equals(ann2.getType())) {
             if (typeScore.substring(0, 4).equals("weak")) {
                 result = 1;
             }
@@ -264,11 +256,125 @@ public class Main {
                 result = ann1.intersectionPercentage(ann2);
             }
             else {
-                System.out.println("You didn't specify the score type you want, or you chose an score type which doesn't exist.");
+                System.out.println("You chose an score type which doesn't exist.");
             }
         }
 
         return result;
+    }
+
+
+    /**
+     * Calculates a ratio of characters covered both by the annotations of a particular type and the annotations of an other type.
+     *
+     * @param th the first annotations table to compare
+     * @param tr the second annotations table to compare
+     * @param typeTh the type of the first annotations
+     * @param typeTr the type of the second aannotations
+     * @return a float between 0 and 1
+     */
+    public static float matchingTypeScore(Annotation[] th, Annotation[] tr, String typeTh, String typeTr) {
+        Annotation[] newTh = oneTypeAnnotations(th, typeTh);
+        Annotation[] newTr = oneTypeAnnotations(tr, typeTr);
+        int newThSize = 0;
+        for (int i=0 ; i<newTh.length ; i++) {
+            newThSize += newTh[i].getEnd() - newTh[i].getStart();
+        }
+        float matchingTypeScore = 0;
+        int openingTh = -1;
+        int openingTr = -1;
+
+        for (int line=0 ; line<=newTh[newTh.length-1].getEnd() ; line++) {
+            for (int i=0 ; i<newTh.length ; i++) {
+                if (line == newTh[i].getStart()) {
+                    openingTh = newTh[i].getStart();
+                }
+                else if (line == newTh[i].getEnd()) {
+                    if (openingTr > -1) {
+                        matchingTypeScore += line - Math.max(openingTh, openingTr);
+                    }
+                    openingTh = -1;
+                }
+            }
+            for (int j=0 ; j<newTr.length ; j++) {
+                if (line == newTr[j].getStart()) {
+                    openingTr = newTr[j].getStart();
+                }
+                else if (line == newTr[j].getEnd()) {
+                    if (openingTh > -1) {
+                        matchingTypeScore += line - Math.max(openingTh, openingTr);
+                    }
+                    openingTr = -1;
+                }
+            }
+        }
+
+        return matchingTypeScore / newThSize;
+    }
+
+
+    /**
+     * Keeps, in a table, only the annotations of a particular type,
+     * then combines annotations which are consecutives or overlapping to have a maximum size,
+     * and finally sorts the annotations depending on their start, in ascending order.
+     *
+     * @param t the initial annotations table
+     * @param typeT the annotation's type we want to keep
+     * @return an annotations table sorted in ascending order of the annotation's start
+     */
+    public static Annotation[] oneTypeAnnotations(Annotation[] t, String typeT) {
+        int nullCells = 0;
+
+        // Only keeps annotations with the type in parameter
+        for (int i=0 ; i<t.length ; i++) {
+            if (!t[i].getType().equals(typeT)) {
+                t[i] = null;
+                nullCells++;
+            }
+        }
+
+        // Combines annotations which are consecutives or overlapping to have a maximum size
+        for (int i=0 ; i<t.length ; i++) {
+            for (int j=i+1 ; j<t.length ; j++) {
+                if (t[i] != null && t[j] != null) {
+                    if (t[i].intersect(t[j])) {
+                        if (t[i].getStart() > t[j].getStart()) {
+                            t[i].setStart(t[j].getStart());
+                        }
+                        if (t[i].getEnd() < t[j].getEnd()) {
+                            t[i].setEnd(t[j].getEnd());
+                        }
+                        t[j] = null;
+                        nullCells++;
+                        i = 0;
+                        j = 0;
+                    }
+                }
+            }
+        }
+
+        // Deletes the cells of the table which are null
+        Annotation[] newT = new Annotation[t.length-nullCells];
+        int j = 0;
+        for (int i=0 ; i<t.length ; i++) {
+            if (t[i] != null) {
+                newT[j] = t[i];
+                j++;
+            }
+        }
+
+        // Sorts the annotations depending on their start, in ascending order
+        Annotation stock;
+        for (int i=0 ; i<newT.length-1 ; i++) {
+            if (newT[i].getStart() > newT[i+1].getStart()) {
+                stock = newT[i];
+                newT[i] = newT[i+1];
+                newT[i+1] = stock;
+                i = 0;
+            }
+        }
+
+        return newT;
     }
 
 
@@ -290,8 +396,7 @@ public class Main {
 
             for (int i=0 ; i<th.length ; i++) {
                 for (int j=0 ; j<tr.length ; j++) {
-                    if (th[i].intersect(tr[j]) == true
-                            && th[i].getType().equals(tr[j].getType())) {
+                    if (th[i].intersect(tr[j]) == true) {
                         if (algo.equals("multiple")) {
                             for (int c=0 ; c<tr.length ; c++) {
                                 if (correspTh[i][c] == null) {
@@ -352,6 +457,7 @@ public class Main {
                 }
             }
         }
+
         else {
             System.out.println("You didn't specify the alignment type you want, or you chose an alignment type which doesn't exist.");
         }
