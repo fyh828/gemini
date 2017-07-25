@@ -15,6 +15,7 @@ public class Main {
         String xmlfile2 = "";
         String typeScore = "";
         String typeAlignment = "multiple";
+        boolean verbose = false;
 
         // scan the arguments
         for (int i=0 ; i<arg.length ; i++) {
@@ -65,6 +66,10 @@ public class Main {
                         "\n greedy" +
                         "\n maxmatching");
             }
+
+            if (arg[i].equals("-verbose")) {
+                verbose = true;
+            }
         }
 
         // display the similarity score
@@ -88,9 +93,9 @@ public class Main {
             }
 
             if (!typeScore.equals("")) {
-                System.out.println("Similarity score : " + score(file1, file2, typeScore, typeAlignment));
+                System.out.println("\n\nSimilarity score : " + score(file1, file2, typeScore, typeAlignment));
             } else {
-                System.out.println("Similarity score (weak precision) : " + score(file1, file2, "weakprecision", typeAlignment)
+                System.out.println("\n\nSimilarity score (weak precision) : " + score(file1, file2, "weakprecision", typeAlignment)
                         + "\nSimilarity score (strict precision) : " + score(file1, file2, "strictprecision", typeAlignment)
                         + "\nSimilarity score (weighted precision) : " + score(file1, file2, "weightedprecision", typeAlignment)
                         + "\nSimilarity score (weak recall) : " + score(file1, file2, "weakrecall", typeAlignment)
@@ -99,6 +104,27 @@ public class Main {
                         + "\nSimilarity score (weak F-measure) : " + score(file1, file2, "weakF-measure", typeAlignment)
                         + "\nSimilarity score (strict F-measure) : " + score(file1, file2, "strictF-measure", typeAlignment)
                         + "\nSimilarity score (weighted F-measure) : " + score(file1, file2, "weightedF-measure", typeAlignment));
+            }
+
+            if (verbose) {
+                System.out.println("\n\nFirst file :\n");
+                for (int i=0 ; i<file1.length ; i++) {
+                    System.out.println(file1[i]);
+                }
+                System.out.println("\n\nSecond file :\n");
+                for (int i=0 ; i<file2.length ; i++) {
+                    System.out.println(file2[i]);
+                }
+                System.out.println("\n\nAlignment table :");
+                Annotation[][] corresp = alignAnnotations(file1, file2, typeAlignment);
+                for (int i=0 ; i<corresp.length ; i++) {
+                    System.out.println("\nTh : " + file1[i] + " :");
+                    for (int j=0 ; j<corresp[i].length ; j++) {
+                        if (corresp[i][j] != null) {
+                            System.out.println("> Tr : " + corresp[i][j]);
+                        }
+                    }
+                }
             }
         }
 
@@ -113,15 +139,15 @@ public class Main {
         // load annotations of the file in the first parameter
 //        Annotation[] f1 = loadAnnotations(arg[0]);
 //        Annotation[] f2 = loadAnnotations(arg[1]);
-//        for (int i=0 ; i<file1.length ; i++) {
-//            System.out.println(file1[i]);
+//        for (int i=0 ; i<f1.length ; i++) {
+//            System.out.println(f1[i]);
 //        }
 
         // test all annotations of the file
         // incorrect line : n° line
 //        String test = "Incorrect annotations : ";
-//        for (int i=0 ; i<file1.length ; i++) {
-//            Annotation a = file1[i];
+//        for (int i=0 ; i<f1.length ; i++) {
+//            Annotation a = f1[i];
 //            if (testAnnotation(arg[0], a) == false) {
 //                test += a.getId() + ", ";
 //            }
@@ -150,6 +176,11 @@ public class Main {
 //        for (int i=0 ; i<ann.length ; i++) {
 //            System.out.println("- " + ann[i] + ".");
 //        }
+
+        //test matchingAnnotaionScore
+//        Annotation[] a = loadAnnotations(arg[0]);
+//        Annotation[] b = loadAnnotations(arg[1]);
+//        System.out.println(matchingAnnotationScore(a[Integer.parseInt(arg[2])], b[Integer.parseInt(arg[3])], arg[4]));
     }
 
 
@@ -201,6 +232,40 @@ public class Main {
         }
         else if (typeScore.substring(typeScore.length()-9, typeScore.length()).equals("F-measure")) {
             result = (float) ( 2 * (nbMatches/th.length) * (nbMatches/tr.length) ) / ( (nbMatches/th.length) + (nbMatches/tr.length) );
+        }
+
+        return result;
+    }
+
+
+    /**
+     * Calculate a similarity score between two annotations.
+     *
+     * @param ann1 the first annotation to compare
+     * @param ann2 the second annotation to compare
+     * @param typeScore the score type to choose between these paameters :
+     *                  weak       |   strict      |   weighted
+     * @return a 0 or 1 if the score type is weak or strict, or a float between 0 and 1 if the score type is weighted
+     */
+    public static float matchingAnnotationScore(Annotation ann1, Annotation ann2, String typeScore) {
+        float result = 0;
+
+        if (ann1.intersect(ann2)) {
+            if (typeScore.substring(0, 4).equals("weak")) {
+                result = 1;
+            }
+            else if (typeScore.substring(0, 6).equals("strict")) {
+                if (ann1.getStart() == ann2.getStart()
+                        && ann1.getEnd() == ann2.getEnd()) {
+                    result = 1;
+                }
+            }
+            else if (typeScore.substring(0, 8).equals("weighted")) {
+                result = ann1.intersectionPercentage(ann2);
+            }
+            else {
+                System.out.println("You didn't specify the score type you want, or you chose an score type which doesn't exist.");
+            }
         }
 
         return result;
@@ -287,6 +352,9 @@ public class Main {
                 }
             }
         }
+        else {
+            System.out.println("You didn't specify the alignment type you want, or you chose an alignment type which doesn't exist.");
+        }
 
         return correspTh;
     }
@@ -314,10 +382,10 @@ public class Main {
 
 
     /**
-     * Load all the annotations of the file's text.
+     * Load all the annotations of the file (.ann).
      *
-     * @param file the file which contains the text
-     * @return an annotations table with all the annoteations of the file
+     * @param file the file which contains the annotations
+     * @return an annotations table with all the annotations of the file
      */
     public static Annotation[] loadAnnotations(String file) {
         String[] openedFile = ouvreFichier(file);
