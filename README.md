@@ -13,10 +13,10 @@ You need to :
 ## Usage
 
 The command to compile is :  
-`javac -cp jdom-2.0.6/jdom-2.0.6.jar;algs4;. Main.java`  
+`javac -cp jdom-2.0.6/jdom-2.0.6.jar;algs4.jar;. Main.java`  
   
 Then to run the program :  
-`java -cp jdom-2.0.6/jdom-2.0.6.jar;algs4;. Main`  
+`java -cp jdom-2.0.6/jdom-2.0.6.jar;algs4.jar;. Main`  
   
 Followed by some parameters :  
 * To indicate files to compare :
