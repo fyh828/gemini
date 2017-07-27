@@ -55,7 +55,7 @@ public class Annotation{
     }
 
     /**
-     * Check if the annotation intersects ith the one in parameter.
+     * Check if the annotation intersects with the one in parameter.
      *
      * @param a the annotation to compare with
      * @return {@code true} if there is an intersection in common between the two annotations
@@ -69,7 +69,7 @@ public class Annotation{
     /**
      * Returns the size of the segment common to both annotations.
      *
-     * @param a the annotation to compare with
+     * @param a the annotation to compare
      * @return the size of the segment common to both annotations
      */
     public int intersectionSize(Annotation a) {
@@ -97,6 +97,6 @@ public class Annotation{
      * @return the persentage of the intersection size
      */
     public float intersectionPercentage(Annotation a) {
-        return (float) intersectionSize(a) / ( a.getLabel().length() + this.label.length() - intersectionSize(a) );
+        return (float) intersectionSize(a) / ( (a.getEnd()-a.getStart()) + (this.end-this.start) - intersectionSize(a) );
     }
 }

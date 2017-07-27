@@ -180,7 +180,12 @@ public class Main {
         //test matchingAnnotaionScore
 //        Annotation[] a = loadAnnotations(arg[0]);
 //        Annotation[] b = loadAnnotations(arg[1]);
-//        System.out.println(matchingAnnotationScore(a[Integer.parseInt(arg[2])], b[Integer.parseInt(arg[3])], arg[4]));
+//        System.out.println(matchingAnnotationScore(a, b, a[Integer.parseInt(arg[2])], b[Integer.parseInt(arg[3])], arg[4]));
+
+        // test matchingTypeScore
+//        Annotation[] f1 = loadAnnotations(arg[0]);
+//        Annotation[] f2 = loadAnnotations(arg[1]);
+//        System.out.println(matchingTypeScore(f1, f2, "LOC", "ORG"));
     }
 
 
@@ -201,13 +206,13 @@ public class Main {
     public static float score(Annotation[] th, Annotation[] tr, String typeScore, String typeAlignment) {
         Annotation[][] correspTh = alignAnnotations(th, tr, typeAlignment);
         float result = -1;
-        int nbMatches = 0;
+        float nbMatches = 0;
 
         // adjust the matches number depending on the 3rd parameter
         for (int i=0 ; i<correspTh.length ; i++) {
             for (int j=0 ; j<correspTh[i].length ; j++) {
                 if (correspTh[i][j] != null) {
-                    nbMatches += matchingAnnotationScore(th[i], correspTh[i][j], typeScore);
+                    nbMatches += matchingAnnotationScore(th, tr, th[i], correspTh[i][j], typeScore);
                 }
             }
         }
@@ -239,7 +244,7 @@ public class Main {
      *                  weak       |   strict      |   weighted
      * @return a 0 or 1 if the score type is weak or strict, or a float between 0 and 1 if the score type is weighted
      */
-    public static float matchingAnnotationScore(Annotation ann1, Annotation ann2, String typeScore) {
+    public static float matchingAnnotationScore(Annotation[] th, Annotation[] tr, Annotation ann1, Annotation ann2, String typeScore) {
         float result = 0;
 
         if (ann1.intersect(ann2) && ann1.getType().equals(ann2.getType())) {
@@ -256,11 +261,11 @@ public class Main {
                 result = ann1.intersectionPercentage(ann2);
             }
             else {
-                System.out.println("You chose an score type which doesn't exist.");
+                System.out.println("You chose a score type which doesn't exist.");
             }
         }
 
-        return result;
+        return (result + matchingTypeScore(th, tr, ann1.getType(), ann2.getType())) / 2;
     }
 
 
@@ -326,25 +331,27 @@ public class Main {
         int nullCells = 0;
 
         // Only keeps annotations with the type in parameter
+        Annotation[] tBis = new Annotation[t.length];
         for (int i=0 ; i<t.length ; i++) {
-            if (!t[i].getType().equals(typeT)) {
-                t[i] = null;
+            if (t[i].getType().equals(typeT)) {
+                tBis[i] = t[i];
+            } else {
                 nullCells++;
             }
         }
 
         // Combines annotations which are consecutives or overlapping to have a maximum size
-        for (int i=0 ; i<t.length ; i++) {
-            for (int j=i+1 ; j<t.length ; j++) {
-                if (t[i] != null && t[j] != null) {
-                    if (t[i].intersect(t[j])) {
-                        if (t[i].getStart() > t[j].getStart()) {
-                            t[i].setStart(t[j].getStart());
+        for (int i=0 ; i<tBis.length ; i++) {
+            for (int j=i+1 ; j<tBis.length ; j++) {
+                if (tBis[i] != null && tBis[j] != null) {
+                    if (tBis[i].intersect(t[j])) {
+                        if (tBis[i].getStart() > tBis[j].getStart()) {
+                            tBis[i].setStart(tBis[j].getStart());
                         }
-                        if (t[i].getEnd() < t[j].getEnd()) {
-                            t[i].setEnd(t[j].getEnd());
+                        if (tBis[i].getEnd() < tBis[j].getEnd()) {
+                            tBis[i].setEnd(tBis[j].getEnd());
                         }
-                        t[j] = null;
+                        tBis[j] = null;
                         nullCells++;
                         i = 0;
                         j = 0;
@@ -354,10 +361,10 @@ public class Main {
         }
 
         // Deletes the cells of the table which are null
-        Annotation[] newT = new Annotation[t.length-nullCells];
+        Annotation[] newT = new Annotation[tBis.length-nullCells];
         int j = 0;
-        for (int i=0 ; i<t.length ; i++) {
-            if (t[i] != null) {
+        for (int i=0 ; i<tBis.length ; i++) {
+            if (tBis[i] != null) {
                 newT[j] = t[i];
                 j++;
             }
