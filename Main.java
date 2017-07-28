@@ -82,14 +82,22 @@ public class Main {
                 file1 = loadAnnotations(bratfile1);
             } else {
                 Document doc1 = sxb.build(new File(xmlfile1));
-                file1 = annFromXML(doc1.getRootElement(), doc1.getRootElement().getValue(), new Annotation[0]);
+                Annotation[] f1 = annFromXML(doc1.getRootElement(), doc1.getRootElement().getValue(), new Annotation[0]);
+                file1 = new Annotation[f1.length-1];
+                for (int i=1 ; i<f1.length ; i++) {
+                    file1[i-1] = f1[i];
+                }
             }
 
             if (!bratfile2.equals("")) {
                 file2 = loadAnnotations(bratfile2);
             } else {
                 Document doc2 = sxb.build(new File(xmlfile2));
-                file2 = annFromXML(doc2.getRootElement(), doc2.getRootElement().getValue(), new Annotation[0]);
+                Annotation[] f2 = annFromXML(doc2.getRootElement(), doc2.getRootElement().getValue(), new Annotation[0]);
+                file2 = new Annotation[f2.length-1];
+                for (int i=1 ; i<f2.length ; i++) {
+                    file2[i-1] = f2[i];
+                }
             }
 
             if (!typeScore.equals("")) {
