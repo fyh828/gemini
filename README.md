@@ -28,7 +28,7 @@ Followed by some parameters :
    * `-bratfile2` followed by second file's name (.ann)  
    *or*
    * `-xmlfile2` followed by second file's name (.xml)
-* To indicate score type, please use one of the following parameters: `weakprecision`, `strictprecision`, `weightedprecision, weakrecall, strictrecall, weightedrecall`, `weakF-measure`, `strictF-measure`, `weightedF-measure`. Those parameters combine:
+* To indicate score type, please use one of the following parameters: `weakprecision`, `strictprecision`, `weightedprecision`, `weakrecall`, `strictrecall`, `weightedrecall`, `weakF-measure`, `strictF-measure`, `weightedF-measure`. Those parameters combine:
    * the context of evaluation (note that we always require two annotations two have the same type to be considered as corresponding annotations):
       * __weak__ means that an annotation of the first file will be considered as corresponding to an annotation of the second file if they intersect on at least one character.
       * __strict__ means that an annotation of the first file will be considered as corresponding to an annotation of the second file if they cover exactly the same characters, that is they start and end exactly at the same characters.
