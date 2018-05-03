@@ -2,6 +2,25 @@
  * The {@code Annotation} class an annotation of a word or a word group in a text.
  */
 
+/*
+Copyright 2017-2018 Coline Mignot, Philippe Gambette
+
+This file is part of Gemini.
+
+    Foobar is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Foobar is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with Gemini.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 public class Annotation{
 
     public String id;
@@ -91,10 +110,10 @@ public class Annotation{
     }
 
     /**
-     * Returns the persentage of the intersection size.
+     * Returns the percentage of the intersection size.
      *
      * @param a the annotation to compare with
-     * @return the persentage of the intersection size
+     * @return the percentage of the intersection size
      */
     public float intersectionPercentage(Annotation a) {
         return (float) intersectionSize(a) / ( (a.getEnd()-a.getStart()) + (this.end-this.start) - intersectionSize(a) );
