@@ -37,7 +37,7 @@ Followed by some parameters :
    * __F-measure__, a combination of precision and recall (https://en.wikipedia.org/wiki/Precision_and_recall)
 * To indicate how this score should be weighted when the two annotations do not have the same label, please use the parameter matchingTypeScore, followed by one of the following options:
    * `strictTypeMatching`: to keep the score unchanged if both annotation labels are the same, and set it to 0 if they have different annotation labels.
-   * `weightedTypeMatching` (not properly working yet, has to be debugged...): matches two annotations only if they have exactly the same type (currently option by default, no other available)
+   * `weightedTypeMatching` : matches two annotations only if they have exactly the same type (currently option by default, no other available)
 * To indicate alignment type:
    * `greedyMatching` (default value): an annotation in the first file will correspond to at most one annotation in the second file, and vice versa, the matching of annotations in the first and second files is done with a greedy algorithm trying to match the closest annotations first
-   * `maxMatching` (not working yet, has to be debugged...): an annotation in the first file will correspond to at most one annotation in the second file, and vice versa, the matching of annotations in the first and second file is done optimally using a maximum matching algorithm in bipartite graphs
+   * `maxMatching` : an annotation in the first file will correspond to at most one annotation in the second file, and vice versa, the matching of annotations in the first and second file is done optimally using a maximum matching algorithm in bipartite graphs
