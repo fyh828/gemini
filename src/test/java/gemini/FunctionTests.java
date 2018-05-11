@@ -11,6 +11,7 @@ public class FunctionTests {
 		assertEquals("a","a");
 	}
 	
+	@SuppressWarnings("null")
 	@Test(expected = NullPointerException.class)
 	public void testNull() {
 	    String s = null;
