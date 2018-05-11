@@ -1,5 +1,5 @@
 /*
-Copyright 2017-2018 Coline Mignot, Philippe Gambette
+Copyright 2017-2018 Coline Mignot, Philippe Gambette, Yuheng FENG
 
 This file is part of Gemini.
 
@@ -17,17 +17,21 @@ This file is part of Gemini.
     along with Gemini.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+package gemini;
+
 import java.io.*;
+import java.util.*;
+import java.util.Map.Entry;
+
 //import edu.princeton.cs.algs4.*;
-import org.jgrapht.*;//https://mvnrepository.com/artifact/org.jgrapht/jgrapht-core/1.0.1
+import org.jgrapht.*;
 import org.jgrapht.graph.*;
 import org.jgrapht.alg.matching.*;
 import org.jdom2.*;
 import org.jdom2.input.*;
-import org.jdom2.filter.*;
-import java.util.*;
 
 public class Main {
+	private final static Map<TwoAnnotation,Float> scoreboard = new HashMap<>();
 
     public static void main(String[] arg) throws JDOMException, IOException {
 
@@ -36,9 +40,10 @@ public class Main {
         String xmlfile1 = "";
         String xmlfile2 = "";
         String scoreType = "";
-        String alignmentType = "greedyMatching";
-        String scoreTypeMatching = "strictTypeMatching";
+        String alignmentType = "maxMatching"; //"greedyMatching";
+        String scoreTypeMatching = "weightedTypeMatching"; //"strictTypeMatching"; // "weakTypeMatching";
         boolean verbose = false;
+        boolean createCSVfile = false;
 
         // scan the arguments
         for (int i=0 ; i<arg.length ; i++) {
@@ -103,6 +108,10 @@ public class Main {
             if (arg[i].equals("-verbose")) {
                 verbose = true;
             }
+            
+            if (arg[i].equals("-CSV")) {
+        			createCSVfile = true;
+            }
         }
         
         if (verbose) {
@@ -125,7 +134,7 @@ public class Main {
                     System.out.println("Loading file 1: "+xmlfile1);
                 }
                 Document doc1 = sxb.build(new File(xmlfile1));                
-                Annotation[] f1 = annFromXML(doc1.getRootElement(), doc1.getRootElement().getValue(), new Annotation[0], 0);
+                Annotation[] f1 = annFromXML(doc1.getRootElement(), doc1.getRootElement().getValue());
                 file1 = new Annotation[f1.length-1];
                 for (int i=1 ; i<f1.length ; i++) {
                     file1[i-1] = f1[i];
@@ -144,7 +153,7 @@ public class Main {
                     System.out.println("Loading file 2: "+xmlfile2);
                 }
                 Document doc2 = sxb.build(new File(xmlfile2));              
-                Annotation[] f2 = annFromXML(doc2.getRootElement(), doc2.getRootElement().getValue(), new Annotation[0], 0);
+                Annotation[] f2 = annFromXML(doc2.getRootElement(), doc2.getRootElement().getValue());
                 file2 = new Annotation[f2.length-1];
                 for (int i=1 ; i<f2.length ; i++) {
                     file2[i-1] = f2[i];
@@ -152,7 +161,10 @@ public class Main {
                 // Save the annotations at the BRAT format
                 saveAnnotations( xmlfile2.substring( 0, xmlfile2.length() - 4 ), f2 );
             }
-
+            
+            createCSV(file1, file2, (float) 0.5, "weightedF-measure", "weightedTypeMatching",createCSVfile);
+            long startTime = System.currentTimeMillis();
+            
             // compute and display the similarity score
             if (!scoreType.equals("")) {
                 if (verbose) {
@@ -195,6 +207,9 @@ public class Main {
                     }
                 }
             }
+            long stopTime = System.currentTimeMillis();
+            long elapsedTime = stopTime - startTime;
+  	      	System.err.println("Time to calculate the score: " + elapsedTime+" ms");
         }
 
         // or deal with missing files
@@ -353,48 +368,67 @@ public class Main {
      * @return a float between 0 and 1
      */
     public static float matchingTypeScore(Annotation[] th, Annotation[] tr, String typeTh, String typeTr, String scoreTypeMatching) {
-        float result = (float) 0.0;
+    	float result = (float) 0.0;
         if (scoreTypeMatching.equals("strictTypeMatching")) {           
            if (typeTh.equals(typeTr)){
               result = (float) 1.0;
            }
         } else {
-           Annotation[] newTh = oneTypeAnnotations(th, typeTh);
-           Annotation[] newTr = oneTypeAnnotations(tr, typeTr);
-           int newThSize = 0;
-           for (int i=0 ; i<newTh.length ; i++) {
-              newThSize += newTh[i].getEnd() - newTh[i].getStart();
-           }
-           float matchingTypeScore = 0;
-           int openingTh = -1;
-           int openingTr = -1;
-
-           for (int line=0 ; line<=newTh[newTh.length-1].getEnd() ; line++) {
-              for (int i=0 ; i<newTh.length ; i++) {
-                 if (line == newTh[i].getStart()) {
-                    openingTh = newTh[i].getStart();
-                 }
-                 else if (line == newTh[i].getEnd()) {
-                    if (openingTr > -1) {
-                        matchingTypeScore += line - Math.max(openingTh, openingTr);
-                    }
-                    openingTh = -1;
-                 }
-              }
-              for (int j=0 ; j<newTr.length ; j++) {
-                 if (line == newTr[j].getStart()) {
-                    openingTr = newTr[j].getStart();
-                 }
-                 else if (line == newTr[j].getEnd()) {
-                    if (openingTh > -1) {
-                       matchingTypeScore += line - Math.max(openingTh, openingTr);
-                    }
-                    openingTr = -1;
-                 }
-              }
-           }
-           result = matchingTypeScore / newThSize;
-        }
+        		TwoAnnotation ta = new TwoAnnotation(typeTh,typeTr);
+        		if(scoreboard.containsKey(ta)) {
+        			result = scoreboard.get(ta);
+        		}
+        		else {
+	           Annotation[] newTh = oneTypeAnnotations(th, typeTh);
+	           Annotation[] newTr = oneTypeAnnotations(tr, typeTr);
+	           Map<Integer,Integer> changeStatus = new TreeMap<>();
+	           // status = 1 : this annotation is in th, but not in tr
+	           // status = 2 : this annotation is in tr, but not in th
+	           // status = 3 : this annotation is in both th and tr 
+	           int status = 1;
+	           
+	           for (Annotation ann:newTh) {
+	        	   		if(ann.getStart() == ann.getEnd())	continue;
+	               changeStatus.put(ann.getStart(), status);
+	               changeStatus.put(ann.getEnd(), status);
+	            }
+	           for (Annotation ann:newTr) {
+	        	   		if(ann.getStart() == ann.getEnd())	continue;
+	            	   status = changeStatus.containsKey(ann.getStart()) ? 3:2;
+	            	   changeStatus.put(ann.getStart(), status);
+	            	   status = changeStatus.containsKey(ann.getEnd()) ? 3:2;
+	            	   changeStatus.put(ann.getEnd(), status);
+	           }
+	           boolean nbThStatus = false;
+	           boolean nbTrStatus = false;
+	           int lastPosition = 0;
+	           int intersection = 0;
+	           int union = 0;
+	
+	           for(Entry<Integer,Integer> e : changeStatus.entrySet()) {
+	        	   		if(nbThStatus && nbTrStatus)	intersection += (e.getKey() - lastPosition);
+	        	   		if(nbThStatus || nbTrStatus) union += (e.getKey() - lastPosition);
+	        	   		switch(e.getValue()) {
+		        	   		case 1:	
+		        	   			nbThStatus = !nbThStatus;
+		        	   			break;
+		        	   		case 2:	
+		        	   			nbTrStatus = !nbTrStatus;
+		        	   			break;
+		        	   		case 3: 
+		        	   			nbThStatus = !nbThStatus;
+		        	   			nbTrStatus = !nbTrStatus;
+	        	   		}
+	        	   		lastPosition = e.getKey();
+	           }
+	           
+	           if(union == 0)	return 0;
+	           result = (float)intersection / union;
+	           System.err.println("Intersection: "+intersection);
+	           System.err.println("Union: "+union);
+	           scoreboard.put(ta, result);
+        		}
+        	}
         return result;
     }
 
@@ -477,29 +511,33 @@ public class Main {
      * @return an annotations table with the annotations of {@code tr} in the cells corresponding with the annotations of {@code th}
      */
     public static Annotation[][] alignAnnotations(Annotation[] th, Annotation[] tr, String algo, boolean verbose) {
-        Annotation[][] correspTh = new Annotation[th.length][tr.length];
+    	Annotation[][] correspTh = new Annotation[th.length][tr.length];
 
         // align one annotation with several depending on the annotations intersection if they have the same type
         if (algo.equals("maxMatching")) {
             // Create a simple weighted graph: http://jgrapht.org/javadoc/org/jgrapht/graph/SimpleWeightedGraph.html#SimpleWeightedGraph-java.lang.Class-
             WeightedGraph<Integer, DefaultEdge> g = new SimpleWeightedGraph<Integer, DefaultEdge>(DefaultEdge.class);
+            Set<Integer> vH = new HashSet<>();
+            Set<Integer> vR = new HashSet<>();
             for (int i=0 ; i<th.length+tr.length ; i++) {
                g.addVertex(i);            
+               if(i<th.length){vH.add(i);}else{vR.add(i);}
             }
             for (int i=0 ; i<th.length ; i++) {
                 for (int j=0 ; j<tr.length ; j++) {
                     if ((th[i].intersect(tr[j]) == true) && (th[i].type.equals(tr[j].type))) {                        
-                        System.out.println(i+" - "+(th.length+j));
-                        DefaultEdge e = g.addEdge(i, th.length+j);
-                        g.setEdgeWeight(e, 1.0);
+                        //System.out.println(i+" - "+(th.length+j));
+                        DefaultWeightedEdge edge = new DefaultWeightedEdge();
+                        g.addEdge(i, th.length+j, edge);
+                        //DefaultWeightedEdge e = (DefaultWeightedEdge) g.addEdge(i, th.length+j);
+                        g.setEdgeWeight(edge, th[i].intersectionPercentage(tr[j]));                        
                     }
                 }
             }
-
             if (algo.equals("maxMatching")) {
-                MaximumWeightBipartiteMatching<Integer, DefaultEdge> b = new MaximumWeightBipartiteMatching<Integer, DefaultEdge>(g, g.vertexSet(), g.vertexSet());
+                MaximumWeightBipartiteMatching<Integer, DefaultEdge> b = new MaximumWeightBipartiteMatching<Integer, DefaultEdge>(g, vH, vR);
                 Set<DefaultEdge> matching = b.computeMatching().getEdges();
-                Iterator iter = matching.iterator();
+                Iterator<DefaultEdge> iter = matching.iterator();
                 while (iter.hasNext()) {
                     DefaultEdge edge = (DefaultEdge) iter.next();                    
                     correspTh[g.getEdgeSource(edge)][0] = tr[g.getEdgeTarget(edge)-th.length];
@@ -653,37 +691,51 @@ public class Main {
      * @param a the annotations table in which the function will add a new annotation in each new tag
      * @return the Annotation's table corresponding to the the XML file
      */
-    public static Annotation[] annFromXML(Element node, String text, Annotation[] a, int currentPosition) {
-        // update id
-        String id = "T" + (a.length);
-
-        // add a cell to the table
-        Annotation[] b = new Annotation[a.length+1];
-        for (int i=0 ; i<a.length ; i++) {
-            b[i] = a[i];
-        }
-
-        // Find the location of the tag
-        int currentLeftInText = 0;
-
-        // add a new Annotation in the last cell of the table
-        b[b.length-1] = new Annotation(id, node.getName(), currentPosition, currentPosition + node.getValue().length(), node.getValue());
-
-        
-        List tags = node.getChildren();
-        Iterator i = tags.iterator();
-        while (i.hasNext()) {
-            Element current = (Element)i.next();
-            int nextPosition = text.indexOf("<"+current.getName()+">"+current.getValue());
-            System.out.println(id+" : "+current.getName()+" ("+nextPosition+")");
-
-            b = annFromXML(current, text, b, nextPosition);
-            currentPosition = nextPosition + current.getValue().length() + current.getName().length()*2+5; 
-            text = text.substring(currentPosition,text.length());
-        }
-        
-        return b;
+    public static Annotation[] annFromXML(Element node, String text) {
+    		node = node.clone();
+		List<Element> l = getAllChildren(node);
+		Annotation[] ann = new Annotation[l.size()];
+		int count = 0, currentPosition=0;
+		System.out.println("Text length : " + text.length());
+		Collections.reverse(l);
+		
+		String separator = "$";
+		while(text.contains(separator)) separator += "$";
+		//System.err.println(separator.length());
+		for(Element ele:l) {
+			String value = ele.getValue();
+			String newValue = separator + value;
+			
+			ele.setText(newValue);
+		}
+		Collections.reverse(l);
+		text = node.getValue();
+		System.out.println(" New Text length : " + text.length());
+		
+		for(Element ele:l) {
+			String value = ele.getValue();
+			int index_start = text.indexOf(value);		
+			ann[count] = new Annotation("T"+count, ele.getName(), 
+					currentPosition+index_start-(count)*separator.length(), currentPosition+index_start-(count)*separator.length()+value.replace(separator, "").length(),
+					ele.getValue().replace(separator, ""));
+			count++;
+			
+			//System.err.println(ele.getName()+" : " + (currentPosition+index_start-count+1) + " - "+ (currentPosition+index_start-count+1+value.replace(separator, "").length())
+			//		+ "   == ->   " + ele.getValue());
+			text = text.substring(index_start+separator.length());		
+			currentPosition += (index_start+separator.length());
+		}
+		return ann;
     }
+    
+    private static List<Element> getAllChildren(Element node) {
+		List<Element> l = new ArrayList<>();
+		l.add(node);
+		if(node.getChildren().size() != 0) 
+			for(Element e:node.getChildren()) 
+				l.addAll(getAllChildren(e));		
+		return l;
+	}
 
 
     /**
@@ -726,5 +778,71 @@ public class Main {
         }
         return lignes;
     }
+    
+    private static void createCSV(Annotation[] file1, Annotation[] file2, float threshold, String scoreType, String scoreTypeMatching, boolean newFile) throws IOException {
+		if(threshold > 1 || threshold < 0) 
+			throw new IllegalArgumentException(" Threshold should entre 0 and 1. Error Value : "+threshold);
+		
+		StringBuilder sb = new StringBuilder();
+		char DEFAULT_SEPARATOR = ',';
+		// CSV Format:   https://en.wikipedia.org/wiki/Comma-separated_values
+		for(Annotation ann1:file1) {
+			for(Annotation ann2:file2) {
+				float score = matchingAnnotationScore(file1, file2, ann1, ann2, scoreType, scoreTypeMatching);
+				if(score >= threshold) {
+					sb.append(ann1.getId());sb.append(DEFAULT_SEPARATOR);
+					sb.append(ann1.getStart());sb.append(DEFAULT_SEPARATOR);
+					sb.append(ann1.getEnd());sb.append(DEFAULT_SEPARATOR);
+					sb.append(applyFormatCSV(ann1.getType()));sb.append(DEFAULT_SEPARATOR);
+					sb.append(applyFormatCSV(ann1.getLabel()));sb.append(DEFAULT_SEPARATOR); 
+					sb.append(score); sb.append(DEFAULT_SEPARATOR);
+					sb.append(applyFormatCSV(ann2.getLabel()));sb.append(DEFAULT_SEPARATOR); 
+					sb.append(applyFormatCSV(ann2.getType()));sb.append(DEFAULT_SEPARATOR);
+					sb.append(ann2.getId());sb.append(DEFAULT_SEPARATOR);
+					sb.append(ann2.getStart());sb.append(DEFAULT_SEPARATOR);
+					sb.append(ann2.getEnd());sb.append("\n");
+				}
+			}
+		}
+		
+		if(newFile) {	
+		String csvFile = "./"+ System.currentTimeMillis() + ".csv";
+    		File file = new File(csvFile);
+    		file.createNewFile();
+    		FileWriter writer = new FileWriter(file);
+    		writer.append(sb.toString());
+    		writer.flush();
+        writer.close();
+		}
+		else {
+			System.out.println(sb.toString());
+		}
+    }
+
+	private static String applyFormatCSV(String origin) {
+			origin = origin.replace("\"", "\"\"");
+			if(origin.contains(",") || origin.contains("\n")) origin = "\""+ origin +"\"";
+			return origin;
+	}
+    
+    private static class TwoAnnotation{
+		final String a1;
+		final String a2;
+		TwoAnnotation(String a1, String a2){
+			this.a1 = a1;
+			this.a2 = a2;
+		}
+		@Override
+	public boolean equals(Object o) {
+			if(this == o) return true;
+			if(this.getClass()!=o.getClass()) return false;
+			TwoAnnotation ta = (TwoAnnotation) o;
+			return ta.a1 == a1 && ta.a2 == a2 || ta.a1 == a2 && ta.a2 == a1;
+		}
+		@Override
+		public int hashCode() {
+    		return a1.hashCode() * 13 + a2.hashCode();
+    	}
+}
 
 }

@@ -21,6 +21,8 @@ This file is part of Gemini.
     along with Gemini.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+package gemini;
+
 public class Annotation{
 
     public String id;
