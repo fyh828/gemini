@@ -8,26 +8,22 @@ Compare two text annotations and provide an alignment score.
 
 You need to :  
 * clone this project on your computer, or download and extract the corresponding ZIP file (using the green "Clone or download" button above)
-* download __jdom-2.0.6.zip__ (http://www.jdom.org/dist/binary/) and unzip it in a folder __jdom-2.0.6__ at the root of the project
-* download __jgrapht-core-1.0.1.jar__ (https://mvnrepository.com/artifact/org.jgrapht/jgrapht-core/1.0.1) and place it at the root of the project 
+* install Maven (https://maven.apache.org/install.html)
 
 ## Usage
 
-Once you've reached the folder which contains the `Main.java` file with the terminal, the command to compile is :  
-`javac -cp jdom-2.0.6/jdom-2.0.6.jar;jgrapht-core-1.0.1.jar;. Main.java`
-  
-Then to run the program :  
-`java -cp jdom-2.0.6/jdom-2.0.6.jar;jgrapht-core-1.0.1.jar;. Main`
+Once you've reached the folder which contains the `pom.xml` file with the terminal, the command to compile and run at the same time is :  
+`mvn -q clean compile exec:java -Dexec.mainClass="gemini.Main" -Dexec.args="[choose_your_argument_here]"`
   
 Followed by some parameters :  
 * To indicate the two files to compare (which contain annotations defined by: an annotation type, the index of the first and the last characters covered by the annotations, as well as the part of the text covered by the annotation):
    * `-bratfile1` followed by first file's name (.ann)  
    *or*
-   * `-xmlfile1` followed by first file's name (.xml) [but currently this option does not work if the same piece of text between tags can be found twice in the text: it should NOT be used!]
+   * `-xmlfile1` followed by first file's name (.xml) 
    *and*
    * `-bratfile2` followed by second file's name (.ann)  
    *or*
-   * `-xmlfile2` followed by second file's name (.xml) [but currently this option does not work if the same piece of text between tags can be found twice in the text: it should NOT be used!]
+   * `-xmlfile2` followed by second file's name (.xml) 
 * To indicate the chosen score type to evaluate the correspondence between one annotation from the first file and one annotation from the second file, please use one of the following options: `weakprecision`, `strictprecision`, `weightedprecision`, `weakrecall`, `strictrecall`, `weightedrecall`, `weakF-measure`, `strictF-measure`, `weightedF-measure`
    * __weak__ means that an annotation of the first file will be considered as corresponding to an annotation of the second file if they intersect on at least one character.
    * __strict__ means that an annotation of the first file will be considered as corresponding to an annotation of the second file if they cover exactly the same characters, that is they start and end exactly at the same characters.
@@ -41,3 +37,5 @@ Followed by some parameters :
 * To indicate alignment type:
    * `greedyMatching` (default value): an annotation in the first file will correspond to at most one annotation in the second file, and vice versa, the matching of annotations in the first and second files is done with a greedy algorithm trying to match the closest annotations first
    * `maxMatching` : an annotation in the first file will correspond to at most one annotation in the second file, and vice versa, the matching of annotations in the first and second file is done optimally using a maximum matching algorithm in bipartite graphs
+* To generate a CSV file which contains the result:  
+   * `-CSV` : the CSV file will be created at the current folder.
