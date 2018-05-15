@@ -44,6 +44,8 @@ public class Main {
         String scoreTypeMatching = "weightedTypeMatching"; //"strictTypeMatching"; // "weakTypeMatching";
         boolean verbose = false;
         boolean createCSVfile = false;
+        boolean visualize = false;
+        String visualizeType = "";
 
         // scan the arguments
         for (int i=0 ; i<arg.length ; i++) {
@@ -112,6 +114,10 @@ public class Main {
             if (arg[i].equals("-CSV")) {
         			createCSVfile = true;
             }
+            if (arg[i].equals("-visualiser")){
+            		visualize = true;
+            		visualizeType = arg[i+1];
+            }
         }
         
         if (verbose) {
@@ -123,7 +129,9 @@ public class Main {
             SAXBuilder sxb = new SAXBuilder();
             Annotation[] file1;
             Annotation[] file2;
-
+            Document doc1 = null;
+            Document doc2 = null;
+            
             if (!bratfile1.equals("")) {
                 if(verbose){
                     System.out.println("Loading file 1: "+bratfile1);
@@ -133,7 +141,7 @@ public class Main {
                 if(verbose){
                     System.out.println("Loading file 1: "+xmlfile1);
                 }
-                Document doc1 = sxb.build(new File(xmlfile1));                
+                doc1 = sxb.build(new File(xmlfile1));                
                 Annotation[] f1 = annFromXML(doc1.getRootElement(), doc1.getRootElement().getValue());
                 file1 = new Annotation[f1.length-1];
                 for (int i=1 ; i<f1.length ; i++) {
@@ -152,7 +160,7 @@ public class Main {
                 if(verbose){
                     System.out.println("Loading file 2: "+xmlfile2);
                 }
-                Document doc2 = sxb.build(new File(xmlfile2));              
+                doc2 = sxb.build(new File(xmlfile2));              
                 Annotation[] f2 = annFromXML(doc2.getRootElement(), doc2.getRootElement().getValue());
                 file2 = new Annotation[f2.length-1];
                 for (int i=1 ; i<f2.length ; i++) {
@@ -162,7 +170,11 @@ public class Main {
                 saveAnnotations( xmlfile2.substring( 0, xmlfile2.length() - 4 ), f2 );
             }
             
-            createCSV(file1, file2, (float) 0.5, "weightedF-measure", "weightedTypeMatching",createCSVfile);
+            createCSV(file1, file2, (float) 0.01, "weightedF-measure", "weightedTypeMatching",createCSVfile);
+            if(visualize) {
+            		Visualization vis = new Visualization(doc1,doc2);
+            		vis.display(visualizeType);
+            }
             long startTime = System.currentTimeMillis();
             
             // compute and display the similarity score
@@ -728,7 +740,7 @@ public class Main {
 		return ann;
     }
     
-    private static List<Element> getAllChildren(Element node) {
+    public static List<Element> getAllChildren(Element node) {
 		List<Element> l = new ArrayList<>();
 		l.add(node);
 		if(node.getChildren().size() != 0) 
@@ -805,44 +817,49 @@ public class Main {
 			}
 		}
 		
-		if(newFile) {	
-		String csvFile = "./"+ System.currentTimeMillis() + ".csv";
-    		File file = new File(csvFile);
-    		file.createNewFile();
-    		FileWriter writer = new FileWriter(file);
-    		writer.append(sb.toString());
-    		writer.flush();
-        writer.close();
-		}
-		else {
+		if (newFile) {
+			String csvFile = "./" + System.currentTimeMillis() + ".csv";
+			File file = new File(csvFile);
+			file.createNewFile();
+			FileWriter writer = new FileWriter(file);
+			writer.append(sb.toString());
+			writer.flush();
+			writer.close();
+		} else {
 			System.out.println(sb.toString());
 		}
-    }
+	}
 
 	private static String applyFormatCSV(String origin) {
-			origin = origin.replace("\"", "\"\"");
-			if(origin.contains(",") || origin.contains("\n")) origin = "\""+ origin +"\"";
-			return origin;
+		origin = origin.replace("\"", "\"\"");
+		if (origin.contains(",") || origin.contains("\n"))
+			origin = "\"" + origin + "\"";
+		return origin;
 	}
     
-    private static class TwoAnnotation{
+	private static class TwoAnnotation {
 		final String a1;
 		final String a2;
-		TwoAnnotation(String a1, String a2){
+
+		TwoAnnotation(String a1, String a2) {
 			this.a1 = a1;
 			this.a2 = a2;
 		}
+
 		@Override
-	public boolean equals(Object o) {
-			if(this == o) return true;
-			if(this.getClass()!=o.getClass()) return false;
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (this.getClass() != o.getClass())
+				return false;
 			TwoAnnotation ta = (TwoAnnotation) o;
 			return ta.a1 == a1 && ta.a2 == a2 || ta.a1 == a2 && ta.a2 == a1;
 		}
+
 		@Override
 		public int hashCode() {
-    		return a1.hashCode() * 13 + a2.hashCode();
-    	}
-}
+			return a1.hashCode() * 13 + a2.hashCode();
+		}
+	}
 
 }
