@@ -39,3 +39,6 @@ Followed by some parameters :
    * `maxMatching` : an annotation in the first file will correspond to at most one annotation in the second file, and vice versa, the matching of annotations in the first and second file is done optimally using a maximum matching algorithm in bipartite graphs
 * To generate a CSV file which contains the result:  
    * `-CSV` : the CSV file will be created at the current folder.
+* To compare one annotation between two files:  
+   * `-visualize` followed by the type you want to compare: Result will be highlighted and be stored in a HTML file at the current folder.
+   

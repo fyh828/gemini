@@ -114,7 +114,7 @@ public class Main {
             if (arg[i].equals("-CSV")) {
         			createCSVfile = true;
             }
-            if (arg[i].equals("-visualiser")){
+            if (arg[i].equals("-visualize")){
             		visualize = true;
             		visualizeType = arg[i+1];
             }
