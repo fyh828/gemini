@@ -1,6 +1,6 @@
 package gemini;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -11,7 +11,7 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.junit.Test;
 
-public class FunctionTests {
+public class AlignmentTest {
 	
 	@Test
 	public void maxBigraphMatchingSimpleTest() {
@@ -54,5 +54,4 @@ public class FunctionTests {
         assertEquals(matching2,solution2);
 	}
 	
-
 }

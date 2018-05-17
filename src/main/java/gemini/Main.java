@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.Map.Entry;
 
 //import edu.princeton.cs.algs4.*;
-import org.jgrapht.*;
 import org.jgrapht.graph.*;
 import org.jgrapht.alg.matching.*;
 import org.jdom2.*;
@@ -50,17 +49,33 @@ public class Main {
         // scan the arguments
         for (int i=0 ; i<arg.length ; i++) {
             if (arg[i].equals("-bratfile1")) {
+            		if(i == arg.length-1 || !new File(arg[i+1]).isFile())
+            			throw new IllegalArgumentException("Missing brat file 1 or the file doesn't exist.");
                 bratfile1 = arg[i+1];
+                if(!new File(bratfile1).getName().endsWith(".ann"))
+                		throw new IllegalArgumentException("File extension error.");
             }
             else if (arg[i].equals("-xmlfile1")) {
+	            	if(i == arg.length-1 || !new File(arg[i+1]).isFile())
+	        			throw new IllegalArgumentException("Missing xml file 1 or the file doesn't exist.");
                 xmlfile1 = arg[i+1];
+                if(!new File(xmlfile1).getName().endsWith(".xml"))
+            			throw new IllegalArgumentException("File extension error.");
             }
 
             if (arg[i].equals("-bratfile2")) {
+	            	if(i == arg.length-1 || !new File(arg[i+1]).isFile())
+	        			throw new IllegalArgumentException("Missing brat file 2 or the file doesn't exist.");
                 bratfile2 = arg[i+1];
+                if(!new File(bratfile2).getName().endsWith(".ann"))
+            			throw new IllegalArgumentException("File extension error.");
             }
             else if (arg[i].equals("-xmlfile2")) {
+	            	if(i == arg.length-1 || !new File(arg[i+1]).isFile())
+	        			throw new IllegalArgumentException("Missing xml file 2 or the file doesn't exist.");
                 xmlfile2 = arg[i+1];
+                if(!new File(xmlfile2).getName().endsWith(".xml"))
+            			throw new IllegalArgumentException("File extension error.");
             }
 
             if (arg[i].equals("weakprecision") || arg[i].equals("weakrecall") || arg[i].equals("weakF-measure")
@@ -234,10 +249,10 @@ public class Main {
 
         // or deal with missing files
         else if (!bratfile1.equals("") || !xmlfile1.equals("") && bratfile2.equals("") && xmlfile2.equals("")) {
-            System.out.println("Second file is missing : -bratfile2 or -xmlfile2 to indicate it");
+            throw new IllegalArgumentException("Second file is missing : -bratfile2 or -xmlfile2 to indicate it");
         }
         else if (bratfile1.equals("") && xmlfile1.equals("") && !bratfile2.equals("") || !xmlfile2.equals("")) {
-            System.out.println("First file is missing : -bratfile1 or -xmlfile1 to indicate it");
+        		throw new IllegalArgumentException("First file is missing : -bratfile1 or -xmlfile1 to indicate it");
         }
 
         // load annotations of the file in the first parameter
@@ -654,7 +669,8 @@ public class Main {
         Annotation[] annotations = new Annotation[openedFile.length];
         String[] attributes = {"","",""};
         String[] attributesBis = {"","",""};
-
+        if(!checkBratFormat(openedFile))
+        		throw new IllegalArgumentException("Brat file broken!");
         for (int i=0 ; i<openedFile.length ; i++) {
             attributes = (openedFile[i]+"\t \t ").split("\t");
             attributesBis = (attributes[1]+"  ").split(" ");
@@ -794,6 +810,30 @@ public class Main {
             System.out.println(e.toString());
         }
         return lignes;
+    }
+    
+    private static boolean checkBratFormat(String[] text) {
+    		Set<String> se = new HashSet<>();
+    		for(String s:text) {
+    			String[] s1 = s.split("\t");
+    			if(s1.length != 3)
+    				return false;
+    			String[] s2 = s1[1].split(" ");
+    			if(s2.length != 3)
+    				return false;
+    			if(Integer.parseInt(s2[1]) < 0)
+    				return false;
+    			if(Integer.parseInt(s2[2]) <= 0)
+    				return false;
+    			if(s1[0].equals("") || s1[2].equals("") || s2[0].equals(""))
+    				return false;
+    			
+    			se.add(s1[0]);
+    		}
+    		// Avoid duplicate id
+    		if(se.size() != text.length)
+    			return false;
+    		return true;
     }
     
     private static void createCSV(Annotation[] file1, Annotation[] file2, float threshold, String scoreType, String scoreTypeMatching, boolean newFile) throws IOException {
