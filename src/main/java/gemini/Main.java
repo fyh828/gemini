@@ -40,8 +40,8 @@ public class Main {
         String xmlfile1 = "";
         String xmlfile2 = "";
         String scoreType = "";
-        String alignmentType = "maxMatching"; //"greedyMatching";
-        String scoreTypeMatching = "weightedTypeMatching"; //"strictTypeMatching"; // "weakTypeMatching";
+        String alignmentType = ""; //"greedyMatching";//maxMatching
+        String scoreTypeMatching = ""; //"strictTypeMatching"; // "weakTypeMatching";//weightedTypeMatching
         boolean verbose = false;
         boolean createCSVfile = false;
         boolean visualize = false;
@@ -124,6 +124,11 @@ public class Main {
            System.out.println("Loading the files...");
         }
         
+        if (alignmentType.equals("")) 
+        		alignmentType = "greedyMatching";
+        if (scoreTypeMatching.equals("")) 
+        		scoreTypeMatching = "weightedTypeMatching";
+        
         // load the files and compute the data structures to store annotations
         if ((!bratfile1.equals("") || !xmlfile1.equals("")) && (!bratfile2.equals("") || !xmlfile2.equals(""))) {
             SAXBuilder sxb = new SAXBuilder();
@@ -169,8 +174,12 @@ public class Main {
                 // Save the annotations at the BRAT format
                 saveAnnotations( xmlfile2.substring( 0, xmlfile2.length() - 4 ), f2 );
             }
+            if (!scoreType.equals(""))
+            		createCSV(file1, file2, (float) 0.01, scoreType, scoreTypeMatching,createCSVfile);
+            else {
+            		createCSV(file1, file2, (float) 0.01, "weightedF-measure", scoreTypeMatching,createCSVfile);
+            }
             
-            createCSV(file1, file2, (float) 0.01, "weightedF-measure", "weightedTypeMatching",createCSVfile);
             if(visualize) {
             		Visualization vis = new Visualization(doc1,doc2);
             		vis.display(visualizeType);
@@ -187,7 +196,6 @@ public class Main {
                 if (verbose) {
                     System.out.println("Computing all similarity scores...");
                 }            
-
                 System.out.println("\n\nSimilarity score (weak precision) : " + score(file1, file2, "weakprecision", alignmentType, scoreTypeMatching, verbose)
                         + "\nSimilarity score (strict precision) : " + score(file1, file2, "strictprecision", alignmentType, scoreTypeMatching, verbose)
                         + "\nSimilarity score (weighted precision) : " + score(file1, file2, "weightedprecision", alignmentType, scoreTypeMatching, verbose)
@@ -436,8 +444,8 @@ public class Main {
 	           
 	           if(union == 0)	return 0;
 	           result = (float)intersection / union;
-	           System.err.println("Intersection: "+intersection);
-	           System.err.println("Union: "+union);
+	           //System.err.println("Intersection: "+intersection);
+	           //System.err.println("Union: "+union);
 	           scoreboard.put(ta, result);
         		}
         	}
@@ -523,98 +531,95 @@ public class Main {
      * @return an annotations table with the annotations of {@code tr} in the cells corresponding with the annotations of {@code th}
      */
     public static Annotation[][] alignAnnotations(Annotation[] th, Annotation[] tr, String algo, boolean verbose) {
-    	Annotation[][] correspTh = new Annotation[th.length][tr.length];
+		Annotation[][] correspTh = new Annotation[th.length][tr.length];
+		// align one annotation with several depending on the annotations intersection if they have the same type
+		if (algo.equals("maxMatching")) {
+			// Create a simple weighted graph:
+			// http://jgrapht.org/javadoc/org/jgrapht/graph/SimpleWeightedGraph.html#SimpleWeightedGraph-java.lang.Class-
+			SimpleWeightedGraph<Integer, DefaultWeightedEdge> g = new SimpleWeightedGraph<Integer, DefaultWeightedEdge>(
+					DefaultWeightedEdge.class);
+			Set<Integer> vH = new HashSet<>();
+			Set<Integer> vR = new HashSet<>();
+			for (int i = 0; i < th.length + tr.length; i++) {
+				g.addVertex(i);
+				if (i < th.length)
+					vH.add(i);
+				else
+					vR.add(i);
+			}
+			for (int i = 0; i < th.length; i++) {
+				for (int j = 0; j < tr.length; j++) {
+					if ((th[i].intersect(tr[j]) == true) && (th[i].type.equals(tr[j].type))) {
+						// System.out.println(i+" - "+(th.length+j));
+						DefaultWeightedEdge edge = new DefaultWeightedEdge();
+						g.addEdge(i, th.length + j, edge);
+						g.setEdgeWeight(edge, th[i].intersectionPercentage(tr[j]));
+					}
+				}
+			}
+			MaximumWeightBipartiteMatching<Integer, DefaultWeightedEdge> b = new MaximumWeightBipartiteMatching<Integer, DefaultWeightedEdge>(
+					g, vH, vR);
+			Set<DefaultWeightedEdge> matching = b.getMatching().getEdges();
+			Iterator<DefaultWeightedEdge> iter = matching.iterator();
+			while (iter.hasNext()) {
+				DefaultWeightedEdge edge = (DefaultWeightedEdge) iter.next();
+				correspTh[g.getEdgeSource(edge)][0] = tr[g.getEdgeTarget(edge) - th.length];
+			}
+		}
 
-        // align one annotation with several depending on the annotations intersection if they have the same type
-        if (algo.equals("maxMatching")) {
-            // Create a simple weighted graph: http://jgrapht.org/javadoc/org/jgrapht/graph/SimpleWeightedGraph.html#SimpleWeightedGraph-java.lang.Class-
-            WeightedGraph<Integer, DefaultEdge> g = new SimpleWeightedGraph<Integer, DefaultEdge>(DefaultEdge.class);
-            Set<Integer> vH = new HashSet<>();
-            Set<Integer> vR = new HashSet<>();
-            for (int i=0 ; i<th.length+tr.length ; i++) {
-               g.addVertex(i);            
-               if(i<th.length){vH.add(i);}else{vR.add(i);}
-            }
-            for (int i=0 ; i<th.length ; i++) {
-                for (int j=0 ; j<tr.length ; j++) {
-                    if ((th[i].intersect(tr[j]) == true) && (th[i].type.equals(tr[j].type))) {                        
-                        //System.out.println(i+" - "+(th.length+j));
-                        DefaultWeightedEdge edge = new DefaultWeightedEdge();
-                        g.addEdge(i, th.length+j, edge);
-                        //DefaultWeightedEdge e = (DefaultWeightedEdge) g.addEdge(i, th.length+j);
-                        g.setEdgeWeight(edge, th[i].intersectionPercentage(tr[j]));                        
-                    }
-                }
-            }
-            if (algo.equals("maxMatching")) {
-                MaximumWeightBipartiteMatching<Integer, DefaultEdge> b = new MaximumWeightBipartiteMatching<Integer, DefaultEdge>(g, vH, vR);
-                Set<DefaultEdge> matching = b.computeMatching().getEdges();
-                Iterator<DefaultEdge> iter = matching.iterator();
-                while (iter.hasNext()) {
-                    DefaultEdge edge = (DefaultEdge) iter.next();                    
-                    correspTh[g.getEdgeSource(edge)][0] = tr[g.getEdgeTarget(edge)-th.length];
-                }
-                /*
-                for (int v=0 ; v<th.length ; v++) {
-                    if (b.mate(v) != -1) {
-                        correspTh[v][0] = tr[b.mate(v)-th.length];
-                    }
-                }
-                */
-            }
-        }
+		// align one annotation with one other depending on the annotations intersection
+		// (for those who have the same type)
+		else if (algo.equals("greedyMatching")) {
+			// matrix creation
+			float[][] t = new float[th.length][tr.length];
+			for (int i = 0; i < th.length; i++) {
+				for (int j = 0; j < tr.length; j++) {
+					if (th[i].type.equals(tr[j].type)) {
+						t[i][j] = th[i].intersectionPercentage(tr[j]);
+					} else {
+						t[i][j] = 0;
+					}
+				}
+			}
 
-        // align one annotation with one other depending on the annotations intersection (for those who have the same type)
-        else if (algo.equals("greedyMatching")) {
-            // matrix creation
-            float[][] t = new float[th.length][tr.length];
-            for (int i=0 ; i<th.length ; i++) {
-                for (int j=0 ; j<tr.length ; j++) {
-                    if (th[i].type.equals(tr[j].type)){
-                       t[i][j] = th[i].intersectionPercentage(tr[j]);
-                    } else {
-                       t[i][j] = 0;
-                    }
-                }
-            }
+			float max = 1;
+			int imax = 0, jmax = 0;
+			while (max > 0) {
+				// search for the maximum
+				max = 0;
+				for (int i = 0; i < t.length; i++) {
+					for (int j = 0; j < t[i].length; j++) {
+						if (max < t[i][j] && t[i][j] > 0) {
+							max = t[i][j];
+							imax = i;
+							jmax = j;
+						}
+					}
+				}
 
-            float max = 1;
-            int imax = 0, jmax = 0;
-            while (max > 0) {
-                // search for the maximum
-                max = 0;
-                for (int i=0 ; i<t.length ; i++) {
-                    for (int j=0 ; j<t[i].length ; j++) {
-                        if (max < t[i][j] && t[i][j] > 0) {
-                            max = t[i][j];
-                            imax = i;
-                            jmax = j;
-                        }
-                    }
-                }
+				// add the match in the matches' table
+				correspTh[imax][0] = tr[jmax];
+				if (verbose) {
+					System.out.println("Annotation " + jmax + " of TR associated with annotation " + imax + " of TH.");
+				}
 
-                // add the match in the matches' table
-                correspTh[imax][0] = tr[jmax];
-                if (verbose) {
-                   System.out.println("Annotation " + jmax + " of TR associated with annotation " + imax + " of TH.");
-                }
+				// "delete" the column and the line corresponding with the added annotation
+				for (int i = 0; i < t.length; i++) {
+					t[i][jmax] = 0;
+				}
+				for (int j = 0; j < t[0].length; j++) {
+					t[imax][j] = 0;
+				}
+			}
+		}
 
-                // "delete" the column and the line corresponding with the added annotation
-                for (int i=0 ; i<t.length ; i++) {
-                    t[i][jmax] = 0;
-                }
-                for (int j=0 ; j<t[0].length ; j++) {
-                    t[imax][j] = 0;
-                }
-            }
-        }
+		else {
+			System.out.println(
+					"You didn't specify the alignment type you want, or you chose an alignment type which doesn't exist.");
+		}
 
-        else {
-            System.out.println("You didn't specify the alignment type you want, or you chose an alignment type which doesn't exist.");
-        }
-
-        return correspTh;
-    }
+		return correspTh;
+	}
 
 
     /**
