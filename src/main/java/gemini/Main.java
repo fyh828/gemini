@@ -131,6 +131,8 @@ public class Main {
             }
             if (arg[i].equals("-visualize")){
             		visualize = true;
+            		if(i == arg.length-1)
+	        			throw new IllegalArgumentException("Missing type you want to visualize.");
             		visualizeType = arg[i+1];
             }
         }
@@ -821,10 +823,15 @@ public class Main {
     			String[] s2 = s1[1].split(" ");
     			if(s2.length != 3)
     				return false;
+    			try {
     			if(Integer.parseInt(s2[1]) < 0)
     				return false;
     			if(Integer.parseInt(s2[2]) <= 0)
     				return false;
+    			}	
+    			catch(NumberFormatException e) {
+    				return false;
+    			}
     			if(s1[0].equals("") || s1[2].equals("") || s2[0].equals(""))
     				return false;
     			
@@ -863,7 +870,7 @@ public class Main {
 		}
 		
 		if (newFile) {
-			String csvFile = "./" + System.currentTimeMillis() + ".csv";
+			String csvFile = "./result_annotations.csv";
 			File file = new File(csvFile);
 			file.createNewFile();
 			FileWriter writer = new FileWriter(file);

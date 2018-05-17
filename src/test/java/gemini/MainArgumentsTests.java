@@ -3,6 +3,7 @@ package gemini;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -264,4 +265,55 @@ public class MainArgumentsTests {
 		Main.main(args2);
 	}
 	
+	@Test
+	public void testAllCombinationsOfScoreType() throws JDOMException, IOException {
+		String[] option = {"weak","strict","weighted","blabla"};
+		String[] value = {"precision","recall","F-measure","blabla"};
+		String[] args = {"-xmlfile1","src/test/resources/testFile.xml","-xmlfile2","src/test/resources/testFile.xml",""};		
+		
+		for(int i=0;i<option.length;i++) {
+			for(int j=0;j<value.length;j++) {
+				args[4] = option[i]+value[j];
+				Main.main(args);
+			}
+		}
+		
+	}
+	
+	@Test
+	public void testOptionCSV() throws JDOMException, IOException {
+		String[] args = {"-xmlfile1","src/test/resources/testFile.xml","-xmlfile2","src/test/resources/testFile.xml","-CSV"};	
+		File f = new File("./result_annotations.csv");
+		if(f.isFile())
+			f.delete();
+		
+		assertFalse(f.isFile());
+		Main.main(args);
+		assertTrue(f.isFile());
+		f.delete();
+	}
+	
+	@Test
+	public void testOptionVisualize() throws JDOMException, IOException {
+		String[] args = {"-xmlfile1","src/test/resources/testFile.xml","-xmlfile2","src/test/resources/testFile.xml","-visualize","Test"};	
+		File f = new File("./result_annotations.html");
+		if(f.isFile())
+			f.delete();
+		
+		assertFalse(f.isFile());
+		Main.main(args);
+		assertTrue(f.isFile());
+		f.delete();
+	}
+	
+	@Test
+	public void testOptionVisualizeWithoutType() throws JDOMException, IOException {
+		String[] args = {"-xmlfile1","src/test/resources/testFile.xml","-xmlfile2","src/test/resources/testFile.xml","-visualize"};	
+		try {
+			Main.main(args);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertTrue(e.getMessage().contains("Missing type"));
+		}
+	}
 }

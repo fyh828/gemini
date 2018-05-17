@@ -26,7 +26,7 @@ public class Visualization {
 	}
 	
 	public void display(String annotationType) throws IOException {
-		String newfile = "./" + "result" + ".html";/*
+		String newfile = "./result_annotations.html";/*
 		XMLOutputter outp = new XMLOutputter();
         //outp.setFormat(Format.getCompactFormat());
         outp.getFormat().setTextMode(Format.TextMode.TRIM_FULL_WHITE);
@@ -42,30 +42,6 @@ public class Visualization {
         Annotation[] f2 = Main.annFromXML(doc2.getRootElement(), doc2.getRootElement().getValue());
         Annotation[] ann1 = Main.oneTypeAnnotations(f1, annotationType);
         Annotation[] ann2 = Main.oneTypeAnnotations(f2, annotationType);
-        /*
-        List<Element> l1 = Main.getAllChildren(doc1.getRootElement());
-        List<Element> l2 = Main.getAllChildren(doc2.getRootElement());
-        l1.remove(0);l2.remove(0);
-        Collections.reverse(l1);
-        List<Integer> status1 = new ArrayList<>();
-
-        //for (Annotation ann:ann1) {System.err.println(ann);}
-        for (Annotation ann:ann1) {
-     	   	if(ann.getStart() == ann.getEnd())	continue;
-     	   	result.insert(ann.getStart() + status1.size()/2 * 29 , "<span class=\"TT1_all\">");
-     	    result.insert(ann.getEnd() + 22 + status1.size()/2 * 29, "</span>");
-     	    status1.add(ann.getStart());
-     	    status1.add(ann.getEnd());
-         }
-        List<Integer> status2 = new ArrayList<>();
-        for (Annotation ann:ann2) {
-     	   	if(ann.getStart() == ann.getEnd())	continue;
-     		result.insert(calculateOffset(status1,ann.getStart()) + ann.getStart() + status2.size()/2 * 29 , "<span class=\"TT2_all\">");
-    	    		result.insert(calculateOffset(status1,ann.getEnd()) + ann.getEnd() + 22 + status2.size()/2 * 29, "</span>");
-    	    		status2.add(ann.getStart());
-    	      	status2.add(ann.getEnd());
-        }
-        */
         
         Map<Integer,Integer> changeStatus = new TreeMap<>();
         // status=1 : 1 start;		status=2 : 2 start;		status=3 : 1 end;		status=4 : 2 end;
@@ -207,18 +183,6 @@ public class Visualization {
         			}
                 	textStatus--;
         		}
-        		//System.out.println(result.substring(result.length() * 9 / 10, result.length()-1)); //entrys[i].getValue()
-        		/*
-        		if(i>=991) {System.out.println(result);//.substring(600,2000)
-        		System.out.println("****===================================================****");
-        		}*/
-        		/*
-        		if(i<95 && i>80 && x==2) {System.out.println(result.substring(6500,8500));//.substring(600,2000)
-        		System.out.println("****===================================================****");
-        		System.err.println("Level : " + textStatus + " =  ===== Status: " + entrys[i].getValue());
-        		}*/
-        		//System.out.println(i+"   =====   "+ nbLetterBefore + "   ----->  " + entrys[i].getValue() + " :::textS ----> " + textStatus);
-        		//System.out.println(result);
 
         } 
         if(x==2)
@@ -286,13 +250,6 @@ public class Visualization {
 		return origin;
 	}
 	
-	/*
-	private static int calculateOffset(List<Integer> l, int position) {
-		int nbElementBefore = (int) l.stream().filter(a -> (a <= position)).count();
-		//System.err.println(nbElementBefore);
-		return nbElementBefore % 2 == 0 ? (nbElementBefore/2*29):(nbElementBefore/2*29+22) ;
-	}
-	*/
 	public static void main(String args[]) throws JDOMException, IOException {
 		SAXBuilder sxb = new SAXBuilder();
 		//String xmlfile1 = "/Users/FENGYuheng/Desktop/fichierXML1.xml";
