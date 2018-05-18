@@ -54,4 +54,42 @@ public class AlignmentTest {
         assertEquals(matching2,solution2);
 	}
 	
+	
+	@Test
+	public void maxMatchingWithTwoAnnotation() {
+		//String[] args = {"-xmlfile1","src/test/resources/testFile.xml","-xmlfile2","src/test/resources/testFile.xml","-visualize="};	
+		Annotation[] th = new Annotation[2];
+		Annotation[] tr = new Annotation[2];
+		th[0] = new Annotation("T1","TEST",1,51,"TH_T1");
+		th[1] = new Annotation("T2","TEST",51,101,"TH_T2");
+		tr[0] = new Annotation("T1","TEST",27,77,"TR_T1");
+		tr[1] = new Annotation("T2","TEST",81,131,"TR_T2");
+		
+		float score1 = Main.score(th,tr,"weightedprecision", "maxMatching", "weightedTypeMatching", false);
+		float score2 = Main.score(th,tr,"weightedprecision", "greedyMatching", "weightedTypeMatching", false);
+		System.out.println("Score1 : " + score1);
+		System.out.println("***********************");
+		System.out.println("Score2 : " + score2);
+
+	}
+	
+	@Test
+	public void alignmentWithTwoDifferentTypeAnnotation() {
+		Annotation[] th = new Annotation[2];
+		Annotation[] tr = new Annotation[2];
+		th[0] = new Annotation("T1","TEST",1,51,"TH_T1");
+		th[1] = new Annotation("T2","TEST",51,101,"TH_T2");
+		tr[0] = new Annotation("T1","TEST2",1,51,"TR_T1");
+		tr[1] = new Annotation("T2","TEST2",51,101,"TR_T2");
+		
+		float score1 = Main.score(th,tr,"weightedprecision", "maxMatching", "weightedTypeMatching", true);
+		System.out.println("==================================");
+		float score2 = Main.score(th,tr,"weightedprecision", "greedyMatching", "weightedTypeMatching", true);
+		System.out.println("***********************");
+		System.out.println("Score1 : " + score1);
+		System.out.println("***********************");
+		System.out.println("Score2 : " + score2);
+	}
+
+	
 }

@@ -26,7 +26,7 @@ public class Visualization {
 	}
 	
 	public void display(String annotationType) throws IOException {
-		String newfile = "./result_annotations.html";/*
+		String newfile = "./result_annotations_" + annotationType + ".html";/*
 		XMLOutputter outp = new XMLOutputter();
         //outp.setFormat(Format.getCompactFormat());
         outp.getFormat().setTextMode(Format.TextMode.TRIM_FULL_WHITE);
@@ -66,7 +66,8 @@ public class Visualization {
         int textStatus = 0;
         int i,c;
         
-        Entry<Integer,Integer>[] entrys = changeStatus.entrySet().toArray(new Entry[changeStatus.size()]);
+        @SuppressWarnings("unchecked")
+		Entry<Integer,Integer>[] entrys = changeStatus.entrySet().toArray(new Entry[changeStatus.size()]);
         if(entrys.length == 0) {
         		System.err.println(" Can't find any annotations with type "+annotationType);
         		return;
@@ -252,10 +253,8 @@ public class Visualization {
 	
 	public static void main(String args[]) throws JDOMException, IOException {
 		SAXBuilder sxb = new SAXBuilder();
-		//String xmlfile1 = "/Users/FENGYuheng/Desktop/fichierXML1.xml";
-		//String xmlfile2 = "/Users/FENGYuheng/Desktop/fichierXML2.xml";
-		String xmlfile1 = "/Users/FENGYuheng/Desktop/CorpusAPILGRAMLAB_2011-06_annoteEleni.xml";
-		String xmlfile2 = "/Users/FENGYuheng/Desktop/CorpusAPILGRAMLAB_2011-06_annote_Lidia4.xml";
+		String xmlfile1 = "src/test/resources/CorpusAPILGRAMLAB_2011-06_annoteEleni.xml";
+		String xmlfile2 = "src/test/resources/CorpusAPILGRAMLAB_2011-06_annote_Lidia4.xml";
 		
 		Visualization vis = new Visualization(sxb.build(new File(xmlfile1)),sxb.build(new File(xmlfile2)));
 		vis.display("EvenTour");

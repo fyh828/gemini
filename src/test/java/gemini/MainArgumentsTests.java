@@ -295,8 +295,8 @@ public class MainArgumentsTests {
 	
 	@Test
 	public void testOptionVisualize() throws JDOMException, IOException {
-		String[] args = {"-xmlfile1","src/test/resources/testFile.xml","-xmlfile2","src/test/resources/testFile.xml","-visualize","Test"};	
-		File f = new File("./result_annotations.html");
+		String[] args = {"-xmlfile1","src/test/resources/testFile.xml","-xmlfile2","src/test/resources/testFile.xml","-visualize=Test"};	
+		File f = new File("./result_annotations_Test.html");
 		if(f.isFile())
 			f.delete();
 		
@@ -308,7 +308,7 @@ public class MainArgumentsTests {
 	
 	@Test
 	public void testOptionVisualizeWithoutType() throws JDOMException, IOException {
-		String[] args = {"-xmlfile1","src/test/resources/testFile.xml","-xmlfile2","src/test/resources/testFile.xml","-visualize"};	
+		String[] args = {"-xmlfile1","src/test/resources/testFile.xml","-xmlfile2","src/test/resources/testFile.xml","-visualize="};	
 		try {
 			Main.main(args);
 			fail();
@@ -316,4 +316,5 @@ public class MainArgumentsTests {
 			assertTrue(e.getMessage().contains("Missing type"));
 		}
 	}
+
 }

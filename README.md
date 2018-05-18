@@ -40,5 +40,5 @@ Followed by some parameters :
 * To generate a CSV file which contains the result:  
    * `-CSV` : the CSV file will be created at the current folder.
 * To compare one annotation between two files:  
-   * `-visualize` followed by the type you want to compare: Result will be highlighted and be stored in a HTML file at the current folder.
+   * `-visualize=[TYPE_YOU_WANT_TO_COMAPRE]` : Result will be highlighted and be stored in a HTML file at the current folder.
    

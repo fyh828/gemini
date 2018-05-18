@@ -43,8 +43,7 @@ public class Main {
         String scoreTypeMatching = ""; //"strictTypeMatching"; // "weakTypeMatching";//weightedTypeMatching
         boolean verbose = false;
         boolean createCSVfile = false;
-        boolean visualize = false;
-        String visualizeType = "";
+        List<String> visualize = new ArrayList<>();
 
         // scan the arguments
         for (int i=0 ; i<arg.length ; i++) {
@@ -129,11 +128,10 @@ public class Main {
             if (arg[i].equals("-CSV")) {
         			createCSVfile = true;
             }
-            if (arg[i].equals("-visualize")){
-            		visualize = true;
-            		if(i == arg.length-1)
+            if (arg[i].startsWith("-visualize=")){
+            		if(arg[i].substring(11).length() == 0)
 	        			throw new IllegalArgumentException("Missing type you want to visualize.");
-            		visualizeType = arg[i+1];
+            		visualize.add(arg[i].substring(11));
             }
         }
         
@@ -197,9 +195,10 @@ public class Main {
             		createCSV(file1, file2, (float) 0.01, "weightedF-measure", scoreTypeMatching,createCSVfile);
             }
             
-            if(visualize) {
+            if(visualize.size() > 0) {
             		Visualization vis = new Visualization(doc1,doc2);
-            		vis.display(visualizeType);
+            		for(String s:visualize)
+            			vis.display(s);
             }
             long startTime = System.currentTimeMillis();
             
@@ -337,9 +336,11 @@ public class Main {
             }
             //}
         }
-        System.out.println("Nb matches: "+nbMatches);
-        System.out.println("TH: "+th.length);
-        System.out.println("TR: "+tr.length);
+        if(verbose) {
+	        System.out.println("Nb matches: "+nbMatches);
+	        System.out.println("TH: "+th.length);
+	        System.out.println("TR: "+tr.length);
+        }
 
         // choose the correct calculation depending on the 3rd parameter
         if (scoreType.substring(scoreType.length()-9, scoreType.length()).equals("precision")) {
@@ -390,7 +391,7 @@ public class Main {
                 System.out.println("You chose a score type which doesn't exist.");
             }
         }
-        
+        System.out.println("Result: "+result+" * score: "+ matchingTypeScore(th, tr, ann1.getType(), ann2.getType(), scoreTypeMatching));
         return (result * matchingTypeScore(th, tr, ann1.getType(), ann2.getType(), scoreTypeMatching));
     }
 
@@ -410,7 +411,7 @@ public class Main {
            if (typeTh.equals(typeTr)){
               result = (float) 1.0;
            }
-        } else {
+        } else if(scoreTypeMatching.equals("weightedTypeMatching")) {
         		TwoAnnotation ta = new TwoAnnotation(typeTh,typeTr);
         		if(scoreboard.containsKey(ta)) {
         			result = scoreboard.get(ta);
@@ -466,6 +467,9 @@ public class Main {
 	           scoreboard.put(ta, result);
         		}
         	}
+        else {
+            System.out.println("The score matching type you chosen doesn't exist.");
+        }
         return result;
     }
 
@@ -581,6 +585,9 @@ public class Main {
 			while (iter.hasNext()) {
 				DefaultWeightedEdge edge = (DefaultWeightedEdge) iter.next();
 				correspTh[g.getEdgeSource(edge)][0] = tr[g.getEdgeTarget(edge) - th.length];
+				if (verbose) {
+					System.out.println("Annotation " + (g.getEdgeTarget(edge) - th.length) + " of TR associated with annotation " + g.getEdgeSource(edge) + " of TH.");
+				}
 			}
 		}
 
@@ -599,9 +606,9 @@ public class Main {
 				}
 			}
 
-			float max = 1;
+			float max;
 			int imax = 0, jmax = 0;
-			while (max > 0) {
+			while(true) {
 				// search for the maximum
 				max = 0;
 				for (int i = 0; i < t.length; i++) {
@@ -613,10 +620,11 @@ public class Main {
 						}
 					}
 				}
-
+				if(max == 0)
+					break;
 				// add the match in the matches' table
 				correspTh[imax][0] = tr[jmax];
-				if (verbose) {
+				if (verbose && max!=0) {
 					System.out.println("Annotation " + jmax + " of TR associated with annotation " + imax + " of TH.");
 				}
 
@@ -627,7 +635,7 @@ public class Main {
 				for (int j = 0; j < t[0].length; j++) {
 					t[imax][j] = 0;
 				}
-			}
+			} 
 		}
 
 		else {
