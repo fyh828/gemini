@@ -120,4 +120,23 @@ public class Annotation{
     public float intersectionPercentage(Annotation a) {
         return (float) intersectionSize(a) / ( (a.getEnd()-a.getStart()) + (this.end-this.start) - intersectionSize(a) );
     }
+    
+    @Override
+    public boolean equals(Object o) {
+    		if(this == o) return true;
+    		if(!(o instanceof Annotation)) return false;
+    		Annotation ann = (Annotation) o;
+    		return this.type == ann.type && this.id == ann.id && this.start == ann.start && this.end == ann.end && this.label == ann.label;
+    }
+    
+    @Override
+    public int hashCode() {
+    		int result = 17;
+    		result = 31 * result + id.hashCode();
+    		result = 31 * result + type.hashCode();
+    		result = 31 * result + start;
+    		result = 31 * result + end;
+    		result = 31 * result + label.hashCode();
+    		return result;
+    }
 }

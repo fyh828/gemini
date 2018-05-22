@@ -56,7 +56,7 @@ public class AlignmentTest {
 	
 	
 	@Test
-	public void maxMatchingWithTwoAnnotation() {
+	public void compareMaxMatchingWithgreedyMatching() {
 		//String[] args = {"-xmlfile1","src/test/resources/testFile.xml","-xmlfile2","src/test/resources/testFile.xml","-visualize="};	
 		Annotation[] th = new Annotation[2];
 		Annotation[] tr = new Annotation[2];

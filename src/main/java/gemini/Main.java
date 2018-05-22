@@ -324,7 +324,9 @@ public class Main {
      * @return a similarity score between 0 and 1.
      */
     public static float score(Annotation[] th, Annotation[] tr, String scoreType, String alignmentType, String scoreTypeMatching, boolean verbose) {
+  //  	for(Annotation aa:th) System.err.println(aa);
         Annotation[][] correspTh = alignAnnotations(th, tr, alignmentType, verbose);
+        
         float result = -1;
         float nbMatches = 0;
         
@@ -391,7 +393,7 @@ public class Main {
                 System.out.println("You chose a score type which doesn't exist.");
             }
         }
-        System.out.println("Result: "+result+" * score: "+ matchingTypeScore(th, tr, ann1.getType(), ann2.getType(), scoreTypeMatching));
+        //Print_result//System.out.println("Result: "+result+" * score: "+ matchingTypeScore(th, tr, ann1.getType(), ann2.getType(), scoreTypeMatching));
         return (result * matchingTypeScore(th, tr, ann1.getType(), ann2.getType(), scoreTypeMatching));
     }
 
@@ -427,13 +429,21 @@ public class Main {
 	           
 	           for (Annotation ann:newTh) {
 	        	   		if(ann.getStart() == ann.getEnd())	continue;
-	               changeStatus.put(ann.getStart(), status);
-	               changeStatus.put(ann.getEnd(), status);
+	               if(changeStatus.containsKey(ann.getStart()))
+	            	   		changeStatus.remove(ann.getStart());
+	               else 
+	            	   		changeStatus.put(ann.getStart(), status);
+	            	   changeStatus.put(ann.getEnd(), status);
 	            }
 	           for (Annotation ann:newTr) {
 	        	   		if(ann.getStart() == ann.getEnd())	continue;
-	            	   status = changeStatus.containsKey(ann.getStart()) ? 3:2;
-	            	   changeStatus.put(ann.getStart(), status);
+	        	   		if(changeStatus.containsKey(ann.getStart())) {
+	        	   			if(changeStatus.get(ann.getStart()) == 1)	changeStatus.put(ann.getStart(), 3);
+	        	   			else if(changeStatus.get(ann.getStart()) == 2)	changeStatus.remove(ann.getStart());
+	        	   			else if(changeStatus.get(ann.getStart()) == 3)	changeStatus.put(ann.getStart(), 1);
+	        	   		}
+	        	   		else
+	        	   			changeStatus.put(ann.getStart(), 2);
 	            	   status = changeStatus.containsKey(ann.getEnd()) ? 3:2;
 	            	   changeStatus.put(ann.getEnd(), status);
 	           }
@@ -442,7 +452,7 @@ public class Main {
 	           int lastPosition = 0;
 	           int intersection = 0;
 	           int union = 0;
-	
+	          //for(Entry<Integer,Integer> e:changeStatus.entrySet()) System.err.println(e.getKey()+" == "+e.getValue());
 	           for(Entry<Integer,Integer> e : changeStatus.entrySet()) {
 	        	   		if(nbThStatus && nbTrStatus)	intersection += (e.getKey() - lastPosition);
 	        	   		if(nbThStatus || nbTrStatus) union += (e.getKey() - lastPosition);
@@ -476,7 +486,7 @@ public class Main {
 
     /**
      * Keeps, in a table, only the annotations of a particular type,
-     * then combines annotations which are consecutives or overlapping to have a maximum size,
+     * then combines annotations which are consecutive or overlapping to have a maximum size,
      * and finally sorts the annotations depending on their start, in ascending order.
      *
      * @param t the initial annotations table
@@ -490,7 +500,7 @@ public class Main {
         Annotation[] tBis = new Annotation[t.length];
         for (int i=0 ; i<t.length ; i++) {
             if (t[i].getType().equals(typeT)) {
-                tBis[i] = t[i];
+                tBis[i] = new Annotation(t[i].getId(),t[i].getType(),t[i].getStart(),t[i].getEnd(),t[i].getLabel());
             } else {
                 nullCells++;
             }
@@ -501,7 +511,7 @@ public class Main {
         for (int i=0 ; i<tBis.length ; i++) {
             for (int j=i+1 ; j<tBis.length ; j++) {
                 if (tBis[i] != null && tBis[j] != null) {
-                    if (tBis[i].intersect(t[j])) {
+                    if (tBis[i].intersect(t[j]) /*&& tBis[i].getEnd() != tBis[j].getStart()*/) {
                         if (tBis[i].getStart() > tBis[j].getStart()) {
                             tBis[i].setStart(tBis[j].getStart());
                         }
@@ -515,14 +525,13 @@ public class Main {
                     }
                 }
             }
-        }
-
+        }//for(Annotation aa:tBis) System.err.println(aa);
         // Deletes the cells of the table which are null
         Annotation[] newT = new Annotation[tBis.length-nullCells];
         int j = 0;
         for (int i=0 ; i<tBis.length ; i++) {
             if (tBis[i] != null) {
-                newT[j] = t[i];
+                newT[j] = tBis[i];
                 j++;
             }
         }
@@ -537,7 +546,7 @@ public class Main {
                 i = 0;
             }
         }
-
+        
         return newT;
     }
 
@@ -552,6 +561,7 @@ public class Main {
      * @return an annotations table with the annotations of {@code tr} in the cells corresponding with the annotations of {@code th}
      */
     public static Annotation[][] alignAnnotations(Annotation[] th, Annotation[] tr, String algo, boolean verbose) {
+    //	for(Annotation aa:th) System.err.println(aa);
 		Annotation[][] correspTh = new Annotation[th.length][tr.length];
 		// align one annotation with several depending on the annotations intersection if they have the same type
 		if (algo.equals("maxMatching")) {
@@ -571,10 +581,11 @@ public class Main {
 			for (int i = 0; i < th.length; i++) {
 				for (int j = 0; j < tr.length; j++) {
 					if ((th[i].intersect(tr[j]) == true) && (th[i].type.equals(tr[j].type))) {
-						// System.out.println(i+" - "+(th.length+j));
+						 
 						DefaultWeightedEdge edge = new DefaultWeightedEdge();
 						g.addEdge(i, th.length + j, edge);
 						g.setEdgeWeight(edge, th[i].intersectionPercentage(tr[j]));
+						//System.out.println(i+" - "+(th.length+j) + " => " + g.getEdgeWeight(edge));//
 					}
 				}
 			}
@@ -585,9 +596,11 @@ public class Main {
 			while (iter.hasNext()) {
 				DefaultWeightedEdge edge = (DefaultWeightedEdge) iter.next();
 				correspTh[g.getEdgeSource(edge)][0] = tr[g.getEdgeTarget(edge) - th.length];
+				//*
 				if (verbose) {
 					System.out.println("Annotation " + (g.getEdgeTarget(edge) - th.length) + " of TR associated with annotation " + g.getEdgeSource(edge) + " of TH.");
 				}
+				//*/
 			}
 		}
 
@@ -602,7 +615,7 @@ public class Main {
 						t[i][j] = th[i].intersectionPercentage(tr[j]);
 					} else {
 						t[i][j] = 0;
-					}
+					}//System.out.println(" ***th[i] = " + th[i] + " >>> ** t[i][j]= "+t[i][j]);
 				}
 			}
 
@@ -624,10 +637,11 @@ public class Main {
 					break;
 				// add the match in the matches' table
 				correspTh[imax][0] = tr[jmax];
+				//*
 				if (verbose && max!=0) {
 					System.out.println("Annotation " + jmax + " of TR associated with annotation " + imax + " of TH.");
 				}
-
+				 //*/
 				// "delete" the column and the line corresponding with the added annotation
 				for (int i = 0; i < t.length; i++) {
 					t[i][jmax] = 0;
@@ -918,7 +932,7 @@ public class Main {
 
 		@Override
 		public int hashCode() {
-			return a1.hashCode() * 13 + a2.hashCode();
+			return 17 * 31 + (31 * a1.hashCode() + a2.hashCode());
 		}
 	}
 
