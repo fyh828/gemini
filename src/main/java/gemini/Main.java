@@ -31,6 +31,10 @@ import org.jdom2.input.*;
 
 public class Main {
 	private final static Map<TwoAnnotation,Float> scoreboard = new HashMap<>();
+	/** separator for the CSV file */
+	private final static char DEFAULT_SEPARATOR = ',';
+	/** if you use one xml file and one brat file, if your brat file uses '\r\n' as the line separator in counting index , this value should be 1.  */
+	public static int transformNtoCRLF = 0;
 
     public static void main(String[] arg) throws JDOMException, IOException {
 
@@ -40,9 +44,10 @@ public class Main {
         String xmlfile2 = "";
         String scoreType = "";
         String alignmentType = ""; //"greedyMatching";//maxMatching
-        String scoreTypeMatching = ""; //"strictTypeMatching"; // "weakTypeMatching";//weightedTypeMatching
+        String scoreTypeMatching = ""; //"strictTypeMatching";//weightedTypeMatching
         boolean verbose = false;
         boolean createCSVfile = false;
+        
         List<String> visualize = new ArrayList<>();
 
         // scan the arguments
@@ -133,6 +138,10 @@ public class Main {
 	        			throw new IllegalArgumentException("Missing type you want to visualize.");
             		visualize.add(arg[i].substring(11));
             }
+            
+            if (arg[i].equals("-CRLF")){
+            		transformNtoCRLF = 1;
+            }
         }
         
         if (verbose) {
@@ -161,7 +170,10 @@ public class Main {
                 if(verbose){
                     System.out.println("Loading file 1: "+xmlfile1);
                 }
-                doc1 = sxb.build(new File(xmlfile1));                
+                doc1 = sxb.build(new File(xmlfile1)); 
+                //String file_contenu1 = new String(Files.readAllBytes(Paths.get(xmlfile1)), StandardCharsets.UTF_8);
+                //doc1.getRootElement().getValue().replace("\n", "\r\n")
+                //doc1.getRootElement().setText(file_contenu1.replace("\n", "\r\n"));
                 Annotation[] f1 = annFromXML(doc1.getRootElement(), doc1.getRootElement().getValue());
                 file1 = new Annotation[f1.length-1];
                 for (int i=1 ; i<f1.length ; i++) {
@@ -189,14 +201,14 @@ public class Main {
                 // Save the annotations at the BRAT format
                 saveAnnotations( xmlfile2.substring( 0, xmlfile2.length() - 4 ), f2 );
             }
-            if (!scoreType.equals(""))
-            		createCSV(file1, file2, (float) 0.01, scoreType, scoreTypeMatching,createCSVfile);
-            else {
-            		createCSV(file1, file2, (float) 0.01, "weightedF-measure", scoreTypeMatching,createCSVfile);
-            }
-            
+
             if(visualize.size() > 0) {
-            		Visualization vis = new Visualization(doc1,doc2);
+            		Visualization vis;
+            		//tmp 
+            		if(doc2 != null)
+            			vis = new Visualization(doc1,doc2);
+            		else 
+            			vis = new Visualization(doc1,file2);
             		for(String s:visualize)
             			vis.display(s);
             }
@@ -207,20 +219,20 @@ public class Main {
                 if (verbose) {
                     System.out.println("Computing the similarity score...");
                 }
-                System.out.println("\n\nSimilarity score : " + score(file1, file2, scoreType, alignmentType, scoreTypeMatching, verbose));
+                System.out.println("\n\nSimilarity score : " + score(file1, file2, scoreType, alignmentType, scoreTypeMatching, verbose, createCSVfile));
             } else {
                 if (verbose) {
                     System.out.println("Computing all similarity scores...");
                 }            
-                System.out.println("\n\nSimilarity score (weak precision) : " + score(file1, file2, "weakprecision", alignmentType, scoreTypeMatching, verbose)
-                        + "\nSimilarity score (strict precision) : " + score(file1, file2, "strictprecision", alignmentType, scoreTypeMatching, verbose)
-                        + "\nSimilarity score (weighted precision) : " + score(file1, file2, "weightedprecision", alignmentType, scoreTypeMatching, verbose)
-                        + "\nSimilarity score (weak recall) : " + score(file1, file2, "weakrecall", alignmentType, scoreTypeMatching, verbose)
-                        + "\nSimilarity score (strict recall) : " + score(file1, file2, "strictrecall", alignmentType, scoreTypeMatching, verbose)
-                        + "\nSimilarity score (weighted recall) : " + score(file1, file2, "weightedrecall", alignmentType, scoreTypeMatching, verbose)
-                        + "\nSimilarity score (weak F-measure) : " + score(file1, file2, "weakF-measure", alignmentType, scoreTypeMatching, verbose)
-                        + "\nSimilarity score (strict F-measure) : " + score(file1, file2, "strictF-measure", alignmentType, scoreTypeMatching, verbose)
-                        + "\nSimilarity score (weighted F-measure) : " + score(file1, file2, "weightedF-measure", alignmentType, scoreTypeMatching, verbose));
+                System.out.println("\n\nSimilarity score (weak precision) : " + score(file1, file2, "weakprecision", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+                        + "\nSimilarity score (strict precision) : " + score(file1, file2, "strictprecision", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+                        + "\nSimilarity score (weighted precision) : " + score(file1, file2, "weightedprecision", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+                        + "\nSimilarity score (weak recall) : " + score(file1, file2, "weakrecall", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+                        + "\nSimilarity score (strict recall) : " + score(file1, file2, "strictrecall", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+                        + "\nSimilarity score (weighted recall) : " + score(file1, file2, "weightedrecall", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+                        + "\nSimilarity score (weak F-measure) : " + score(file1, file2, "weakF-measure", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+                        + "\nSimilarity score (strict F-measure) : " + score(file1, file2, "strictF-measure", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+                        + "\nSimilarity score (weighted F-measure) : " + score(file1, file2, "weightedF-measure", alignmentType, scoreTypeMatching, verbose, createCSVfile));
             }
 
             if (verbose) {
@@ -255,60 +267,7 @@ public class Main {
         else if (bratfile1.equals("") && xmlfile1.equals("") && !bratfile2.equals("") || !xmlfile2.equals("")) {
         		throw new IllegalArgumentException("First file is missing : -bratfile1 or -xmlfile1 to indicate it");
         }
-
-        // load annotations of the file in the first parameter
-//        Annotation[] f1 = loadAnnotations(arg[0]);
-//        Annotation[] f2 = loadAnnotations(arg[1]);
-//        for (int i=0 ; i<f1.length ; i++) {
-//            System.out.println(f1[i]);
-//        }
-
-        // test all annotations of the file
-        // incorrect line : n° line
-//        String test = "Incorrect annotations : ";
-//        for (int i=0 ; i<f1.length ; i++) {
-//            Annotation a = f1[i];
-//            if (testAnnotation(arg[0], a) == false) {
-//                test += a.getId() + ", ";
-//            }
-//        }
-//        System.out.println(test);
-
-        //test alignAnnotations
-//        Annotation[][] corresp = alignAnnotations(f1, f2, arg[2]);
-//        for (int i=0 ; i<corresp.length ; i++) {
-//            System.out.println("correspTh " + (i+1) + " :");
-//            for (int j=0 ; j<corresp[i].length ; j++) {
-//                if (corresp[i][j] != null) {
-//                    System.out.println(corresp[i][j]);
-//                }
-//            }
-//            System.out.println("\n");
-//        }
-
-        // test score
-//        System.out.println("Similarity score : " + score(file1, file2, arg[2], "greedyMatching"));
-
-        // test annFromXML
-//        SAXBuilder sxb = new SAXBuilder();
-//        Document document = sxb.build(new File(arg[0]));
-//        Annotation[] ann = annFromXML(document.getRootElement(), document.getRootElement().getValue(), new Annotation[0], 0);
-//        for (int i=0 ; i<ann.length ; i++) {
-//            System.out.println("- " + ann[i] + ".");
-//        }
-
-        //test matchingAnnotaionScore
-//        Annotation[] a = loadAnnotations(arg[0]);
-//        Annotation[] b = loadAnnotations(arg[1]);
-//        System.out.println(matchingAnnotationScore(a, b, a[Integer.parseInt(arg[2])], b[Integer.parseInt(arg[3])], arg[4]));
-
-        // test matchingTypeScore
-//        Annotation[] f1 = loadAnnotations(arg[0]);
-//        Annotation[] f2 = loadAnnotations(arg[1]);
-//        System.out.println(matchingTypeScore(f1, f2, "LOC", "ORG"));
     }
-
-
 
     /**
      * Calculate a similarity score relating to the annotations between two texts.
@@ -323,26 +282,40 @@ public class Main {
      *                      greedyMatching | maxMatching
      * @return a similarity score between 0 and 1.
      */
-    public static float score(Annotation[] th, Annotation[] tr, String scoreType, String alignmentType, String scoreTypeMatching, boolean verbose) {
-  //  	for(Annotation aa:th) System.err.println(aa);
+    public static float score(Annotation[] th, Annotation[] tr, String scoreType, String alignmentType, String scoreTypeMatching, boolean verbose, boolean createCSVfile) {
         Annotation[][] correspTh = alignAnnotations(th, tr, alignmentType, verbose);
         
         float result = -1;
         float nbMatches = 0;
         
+        StringBuilder sb = null;
+        float score;
+        if(createCSVfile)  sb = new StringBuilder();
+        
         // adjust the matches number depending on the 3rd parameter
         for (int i=0 ; i<correspTh.length ; i++) {
             //for (int j=0 ; j<correspTh[i].length ; j++) {
-            if (correspTh[i][0] != null) {                 
-                 nbMatches += matchingAnnotationScore(th, tr, th[i], correspTh[i][0], scoreType, scoreTypeMatching);
+            if (correspTh[i][0] != null) {       
+            		score = matchingAnnotationScore(th, tr, th[i], correspTh[i][0], scoreType, scoreTypeMatching);
+            		if(createCSVfile)	buildCSVFile(sb, th[i], correspTh[i][0], score);
+                nbMatches += score;
             }
             //}
         }
         if(verbose) {
+        		System.out.println("------------------------");
+        		System.out.println("Score type : "+scoreType);
 	        System.out.println("Nb matches: "+nbMatches);
 	        System.out.println("TH: "+th.length);
 	        System.out.println("TR: "+tr.length);
+	        System.out.println("------------------------");
         }
+        if(createCSVfile)
+			try {
+				createCSVFile(sb, scoreType);
+			} catch (IOException e) {
+				System.out.println("Create CSV File failed : "+e.getMessage());
+			}
 
         // choose the correct calculation depending on the 3rd parameter
         if (scoreType.substring(scoreType.length()-9, scoreType.length()).equals("precision")) {
@@ -596,11 +569,11 @@ public class Main {
 			while (iter.hasNext()) {
 				DefaultWeightedEdge edge = (DefaultWeightedEdge) iter.next();
 				correspTh[g.getEdgeSource(edge)][0] = tr[g.getEdgeTarget(edge) - th.length];
-				//*
+				/*
 				if (verbose) {
 					System.out.println("Annotation " + (g.getEdgeTarget(edge) - th.length) + " of TR associated with annotation " + g.getEdgeSource(edge) + " of TH.");
 				}
-				//*/
+				*/
 			}
 		}
 
@@ -637,11 +610,11 @@ public class Main {
 					break;
 				// add the match in the matches' table
 				correspTh[imax][0] = tr[jmax];
-				//*
+				/*
 				if (verbose && max!=0) {
 					System.out.println("Annotation " + jmax + " of TR associated with annotation " + imax + " of TH.");
 				}
-				 //*/
+				 // */
 				// "delete" the column and the line corresponding with the added annotation
 				for (int i = 0; i < t.length; i++) {
 					t[i][jmax] = 0;
@@ -701,7 +674,7 @@ public class Main {
             //System.out.println(file+" "+attributes.length+" "+attributesBis.length); 
             annotations[i] = new Annotation(attributes[0], attributesBis[0], Integer.parseInt(attributesBis[1]), Integer.parseInt(attributesBis[2]), attributes[2]);
         }
-        System.out.println(annotations.length);
+        //System.out.println(annotations.length);
         return annotations;
     }
 
@@ -752,8 +725,8 @@ public class Main {
     		node = node.clone();
 		List<Element> l = getAllChildren(node);
 		Annotation[] ann = new Annotation[l.size()];
-		int count = 0, currentPosition=0;
-		System.out.println("Text length : " + text.length());
+		int count = 0, currentPosition=0, count_lines=0, index_start=0;
+		//System.out.println("Text length : " + text.length());
 		Collections.reverse(l);
 		
 		String separator = "$";
@@ -767,22 +740,28 @@ public class Main {
 		}
 		Collections.reverse(l);
 		text = node.getValue();
-		System.out.println(" New Text length : " + text.length());
-		
+		//System.out.println(" New Text length : " + text.length());
+		//System.err.println(text.length() - text.replace("\n", "").length());
 		for(Element ele:l) {
 			String value = ele.getValue();
-			int index_start = text.indexOf(value);		
+			index_start = text.indexOf(value);	
+			count_lines += countNbLinesBeforePosition(text , index_start)*transformNtoCRLF;
 			ann[count] = new Annotation("T"+count, ele.getName(), 
-					currentPosition+index_start-(count)*separator.length(), currentPosition+index_start-(count)*separator.length()+value.replace(separator, "").length(),
+					currentPosition+index_start-(count)*separator.length() + count_lines,
+					currentPosition+index_start-(count)*separator.length()+value.replace(separator, "").length() + count_lines,
 					ele.getValue().replace(separator, ""));
 			count++;
 			
 			//System.err.println(ele.getName()+" : " + (currentPosition+index_start-count+1) + " - "+ (currentPosition+index_start-count+1+value.replace(separator, "").length())
 			//		+ "   == ->   " + ele.getValue());
+			
 			text = text.substring(index_start+separator.length());		
 			currentPosition += (index_start+separator.length());
 		}
 		return ann;
+    }
+    private static int countNbLinesBeforePosition(String text, int position) {
+    		return (int)text.substring(0, position).chars().filter(ch -> ch=='\n').count();
     }
     
     public static List<Element> getAllChildren(Element node) {
@@ -856,7 +835,6 @@ public class Main {
     			}
     			if(s1[0].equals("") || s1[2].equals("") || s2[0].equals(""))
     				return false;
-    			
     			se.add(s1[0]);
     		}
     		// Avoid duplicate id
@@ -865,31 +843,65 @@ public class Main {
     		return true;
     }
     
-    private static void createCSV(Annotation[] file1, Annotation[] file2, float threshold, String scoreType, String scoreTypeMatching, boolean newFile) throws IOException {
+    private static void buildCSVFile(StringBuilder sb, Annotation ann1, Annotation ann2, float score) {
+    		if(score > 1 || score < 0) 
+			throw new IllegalArgumentException(" UNKNOWN ERROR . Score should entre 0 and 1. Error Value : "+score);
+    		sb.append(ann1.getId());sb.append(DEFAULT_SEPARATOR);
+		sb.append(ann1.getStart());sb.append(DEFAULT_SEPARATOR);
+		sb.append(ann1.getEnd());sb.append(DEFAULT_SEPARATOR);
+		sb.append(applyFormatCSV(ann1.getType()));sb.append(DEFAULT_SEPARATOR);
+		sb.append(applyFormatCSV(ann1.getLabel()));sb.append(DEFAULT_SEPARATOR); 
+		sb.append(score); sb.append(DEFAULT_SEPARATOR);
+		sb.append(applyFormatCSV(ann2.getLabel()));sb.append(DEFAULT_SEPARATOR); 
+		sb.append(applyFormatCSV(ann2.getType()));sb.append(DEFAULT_SEPARATOR);
+		sb.append(ann2.getId());sb.append(DEFAULT_SEPARATOR);
+		sb.append(ann2.getStart());sb.append(DEFAULT_SEPARATOR);
+		sb.append(ann2.getEnd());sb.append("\n");
+    }
+    
+    private static void createCSVFile(StringBuilder sb, String scoreType) throws IOException {
+    		String csvFile = "./result_annotations_"+scoreType+".csv";
+		File file = new File(csvFile);
+		file.createNewFile();
+		FileWriter writer = new FileWriter(file);
+		writer.append(sb.toString());
+		writer.flush();
+		writer.close();
+    }
+    
+    
+    // For avoiding re-calculate the result, this method is re-written to buildCSVFile and createCSVFile, and then integrated into score() 
+    /*private static void createCSV(Annotation[] file1, Annotation[] file2, float threshold, String alignmentType, String scoreType, String scoreTypeMatching, boolean newFile) throws IOException {
 		if(threshold > 1 || threshold < 0) 
 			throw new IllegalArgumentException(" Threshold should entre 0 and 1. Error Value : "+threshold);
 		
 		StringBuilder sb = new StringBuilder();
 		char DEFAULT_SEPARATOR = ',';
 		// CSV Format:   https://en.wikipedia.org/wiki/Comma-separated_values
-		for(Annotation ann1:file1) {
-			for(Annotation ann2:file2) {
-				float score = matchingAnnotationScore(file1, file2, ann1, ann2, scoreType, scoreTypeMatching);
-				if(score >= threshold) {
-					sb.append(ann1.getId());sb.append(DEFAULT_SEPARATOR);
-					sb.append(ann1.getStart());sb.append(DEFAULT_SEPARATOR);
-					sb.append(ann1.getEnd());sb.append(DEFAULT_SEPARATOR);
-					sb.append(applyFormatCSV(ann1.getType()));sb.append(DEFAULT_SEPARATOR);
-					sb.append(applyFormatCSV(ann1.getLabel()));sb.append(DEFAULT_SEPARATOR); 
-					sb.append(score); sb.append(DEFAULT_SEPARATOR);
-					sb.append(applyFormatCSV(ann2.getLabel()));sb.append(DEFAULT_SEPARATOR); 
-					sb.append(applyFormatCSV(ann2.getType()));sb.append(DEFAULT_SEPARATOR);
-					sb.append(ann2.getId());sb.append(DEFAULT_SEPARATOR);
-					sb.append(ann2.getStart());sb.append(DEFAULT_SEPARATOR);
-					sb.append(ann2.getEnd());sb.append("\n");
-				}
-			}
-		}
+		
+        Annotation[][] correspTh = alignAnnotations(file1, file2, alignmentType, false);
+        Annotation ann1,ann2;
+        
+        for (int i=0 ; i<correspTh.length ; i++) {
+
+            if (correspTh[i][0] != null) {                 
+             	ann1 = file1[i]; ann2 =  correspTh[i][0];
+	            	float score = matchingAnnotationScore(file1, file2, ann1, ann2, scoreType, scoreTypeMatching);
+					if(score >= threshold) {
+						sb.append(ann1.getId());sb.append(DEFAULT_SEPARATOR);
+						sb.append(ann1.getStart());sb.append(DEFAULT_SEPARATOR);
+						sb.append(ann1.getEnd());sb.append(DEFAULT_SEPARATOR);
+						sb.append(applyFormatCSV(ann1.getType()));sb.append(DEFAULT_SEPARATOR);
+						sb.append(applyFormatCSV(ann1.getLabel()));sb.append(DEFAULT_SEPARATOR); 
+						sb.append(score); sb.append(DEFAULT_SEPARATOR);
+						sb.append(applyFormatCSV(ann2.getLabel()));sb.append(DEFAULT_SEPARATOR); 
+						sb.append(applyFormatCSV(ann2.getType()));sb.append(DEFAULT_SEPARATOR);
+						sb.append(ann2.getId());sb.append(DEFAULT_SEPARATOR);
+						sb.append(ann2.getStart());sb.append(DEFAULT_SEPARATOR);
+						sb.append(ann2.getEnd());sb.append("\n");
+					}
+	            }
+        }
 		
 		if (newFile) {
 			String csvFile = "./result_annotations.csv";
@@ -903,7 +915,7 @@ public class Main {
 			System.out.println(sb.toString());
 		}
 	}
-
+	*/
 	private static String applyFormatCSV(String origin) {
 		origin = origin.replace("\"", "\"\"");
 		if (origin.contains(",") || origin.contains("\n"))

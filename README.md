@@ -41,4 +41,5 @@ Followed by some parameters :
    * `-CSV` : the CSV file will be created at the current folder.
 * To compare one annotation between two files:  
    * `-visualize=[TYPE_YOU_WANT_TO_COMAPRE]` : Result will be highlighted and be stored in a HTML file at the current folder.
+* If you use one XML file and one brat file, and if your brat file uses '\r\n' as the line separator in counting index, you need to compile with the parameter `-CRLF`. When building a XML file, the XML parse library normalize all '\r\n' in contents to '\n', so there is a offset in two annotation files. This option allows to calculate index with this offset.
    

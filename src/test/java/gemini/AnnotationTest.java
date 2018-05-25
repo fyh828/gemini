@@ -4,7 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class TypeMatchingTest {
+public class AnnotationTest {
+	
 	@Test
 	public void oneTypeAnnoTest(){
 		Annotation[] th = new Annotation[3];
@@ -16,4 +17,14 @@ public class TypeMatchingTest {
 		assertEquals(newTh[0],new Annotation("T1","Date",1,71,"TH_T1"));
 
 	}
+	
+	@Test
+	public void loadAnnotationsDisorder(){
+		Annotation[] anns = Main.loadAnnotations("src/test/resources/orderTest1.ann");
+		assertEquals(anns.length,2);
+		anns = Main.loadAnnotations("src/test/resources/Date_ZH_TR.ann");
+		assertEquals(anns.length,164);
+	}
+	
+
 }

@@ -65,8 +65,8 @@ public class AlignmentTest {
 		tr[0] = new Annotation("T1","TEST",27,77,"TR_T1");
 		tr[1] = new Annotation("T2","TEST",81,131,"TR_T2");
 		
-		float score1 = Main.score(th,tr,"weightedprecision", "maxMatching", "weightedTypeMatching", false);
-		float score2 = Main.score(th,tr,"weightedprecision", "greedyMatching", "weightedTypeMatching", false);
+		float score1 = Main.score(th,tr,"weightedprecision", "maxMatching", "weightedTypeMatching", false, false);
+		float score2 = Main.score(th,tr,"weightedprecision", "greedyMatching", "weightedTypeMatching", false, false);
 		System.out.println("Score1 : " + score1);
 		System.out.println("***********************");
 		System.out.println("Score2 : " + score2);
@@ -82,9 +82,9 @@ public class AlignmentTest {
 		tr[0] = new Annotation("T1","TEST2",1,51,"TR_T1");
 		tr[1] = new Annotation("T2","TEST2",51,101,"TR_T2");
 		
-		float score1 = Main.score(th,tr,"weightedprecision", "maxMatching", "weightedTypeMatching", true);
+		float score1 = Main.score(th,tr,"weightedprecision", "maxMatching", "weightedTypeMatching", true, false);
 		System.out.println("==================================");
-		float score2 = Main.score(th,tr,"weightedprecision", "greedyMatching", "weightedTypeMatching", true);
+		float score2 = Main.score(th,tr,"weightedprecision", "greedyMatching", "weightedTypeMatching", true, false);
 		System.out.println("***********************");
 		System.out.println("Score1 : " + score1);
 		System.out.println("***********************");

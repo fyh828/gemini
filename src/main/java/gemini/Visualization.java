@@ -14,15 +14,27 @@ import org.jdom2.input.SAXBuilder;
 public class Visualization {
 	private Document doc1;
 	private Document doc2;
+	private Annotation[] doc2_tmp;
 	public Visualization(Document doc1, Document doc2) {
-		this.doc1 = doc1;
+		this.doc1 =	doc1;
 		this.doc2 = doc2;
 		if(!checkTwoFileSame()) {
 			throw new IllegalArgumentException(" Can't Visualize. After removing XML tags, two texts aren't exactly the same. ");
 		}
 	}
+	// Temporally
+	public Visualization(Document doc1, Annotation[] doc2_tmp) {
+		this.doc1 =	doc1;
+		this.doc2_tmp = doc2_tmp;
+	}
+	
 	private boolean checkTwoFileSame() {
-		return doc1.getRootElement().getValue().equals(doc2.getRootElement().getValue());
+		try {
+			return doc1.getRootElement().getValue().equals(doc2.getRootElement().getValue());
+		}
+		catch(NullPointerException e) {
+			throw new IllegalArgumentException(" Both two files must be XML file. ");
+		}
 	}
 	
 	public void display(String annotationType) throws IOException {
@@ -38,8 +50,15 @@ public class Visualization {
         String str = sb.toString();*/
         StringBuilder result = new StringBuilder(doc1.getRootElement().getValue());
         
+        if(Main.transformNtoCRLF == 1)
+        		result = new StringBuilder(result.toString().replace("\n", "\r\n"));
+        
         Annotation[] f1 = Main.annFromXML(doc1.getRootElement(), doc1.getRootElement().getValue());
-        Annotation[] f2 = Main.annFromXML(doc2.getRootElement(), doc2.getRootElement().getValue());
+        Annotation[] f2;
+        if(doc2_tmp == null)
+        		f2 = Main.annFromXML(doc2.getRootElement(), doc2.getRootElement().getValue());
+        else
+        		f2 = doc2_tmp;
         Annotation[] ann1 = Main.oneTypeAnnotations(f1, annotationType);
         Annotation[] ann2 = Main.oneTypeAnnotations(f2, annotationType);
         
@@ -72,7 +91,7 @@ public class Visualization {
         		System.err.println(" Can't find any annotations with type "+annotationType);
         		return;
         }
-        
+        try {
         for(int x=1;x<3;x++,textStatus=0) {
         for(i=0;i<changeStatus.size()-1;i++) {
         		if(x==2)
@@ -194,6 +213,7 @@ public class Visualization {
        // System.out.println("x=1 end -> nbLetterBefore: "+nbLetterBefore + "  =  textStatus :   "+ textStatus);
         
         }
+        }catch(StringIndexOutOfBoundsException e) {}
         
         
         // SKY BLUE:#66d9ff	RED:#ff4d4d	GREEN:#66ffb3	PURPLE:#ccb3ff	PINK:#ff80bf
@@ -218,7 +238,10 @@ public class Visualization {
         		".comment2_explain{\npadding-left:10px;\nfont-size: 80%;\ntext-align: left;\n}\n"+
         "</style>\n";
         String[] path1 = doc1.getBaseURI().split("/");
-        String[] path2 = doc2.getBaseURI().split("/");
+       //tmp 
+        String[] path2;
+        if(doc2 != null) path2 = doc2.getBaseURI().split("/"); 
+        else path2 = new String[]{"ANN FILE"};
         String floatingWindow = "<div class=\"comment\">Annotation &#60"+ annotationType +"&#62;\n" + 
         		"        <div class=\"comment1\">\n" + 
         		"            <div class=\"comment1_example\">Text</div>\n" + 
@@ -241,7 +264,7 @@ public class Visualization {
 		writer.flush();
 		writer.close();
 		
-		System.out.println(htmlPage);
+		//System.out.println(htmlPage);
 	}
 	
 	private static String applyFormatHTML(String origin) {

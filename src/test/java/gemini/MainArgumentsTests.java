@@ -283,14 +283,31 @@ public class MainArgumentsTests {
 	@Test
 	public void testOptionCSV() throws JDOMException, IOException {
 		String[] args = {"-xmlfile1","src/test/resources/testFile.xml","-xmlfile2","src/test/resources/testFile.xml","-CSV"};	
-		File f = new File("./result_annotations.csv");
-		if(f.isFile())
-			f.delete();
+		String[] option = {"weak","strict","weighted"};
+		String[] value = {"precision","recall","F-measure"};
+		String fileName = "./result_annotations_";
 		
-		assertFalse(f.isFile());
+		for(int i=0;i<option.length;i++) {
+			for(int j=0;j<value.length;j++) {
+				File f = new File(fileName + option[i] + value[j] + ".csv");
+				if(f.isFile())
+					f.delete();
+				
+				assertFalse(f.isFile());
+			}
+		}
+		
+		
 		Main.main(args);
-		assertTrue(f.isFile());
-		f.delete();
+		
+		
+		for(int i=0;i<option.length;i++) {
+			for(int j=0;j<value.length;j++) {
+				File f = new File(fileName + option[i] + value[j] + ".csv");
+				assertTrue(f.isFile());
+				f.delete();
+			}
+		}		
 	}
 	
 	@Test
