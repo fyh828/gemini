@@ -11,6 +11,13 @@ import org.jdom2.Document;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 
+/**
+ * This class provides a tool to visualize the annotation in a corpus on a HTML+CSS page. 
+ * The program takes two files as input. The first file must be XML file, the second file can be either XML or Brat file.
+ * 
+ * @author Yuheng FENG
+ *
+ */
 public class Visualization {
 	private Document doc1;
 	private Document doc2;
@@ -22,12 +29,17 @@ public class Visualization {
 			throw new IllegalArgumentException(" Can't Visualize. After removing XML tags, two texts aren't exactly the same. ");
 		}
 	}
-	// Temporally
+
 	public Visualization(Document doc1, Annotation[] doc2_tmp) {
 		this.doc1 =	doc1;
 		this.doc2_tmp = doc2_tmp;
 	}
 	
+	/**
+	 * Check two XML files are same or not after removing all tags.
+	 * 
+	 * @return true if two XML files are same, false otherwise.
+	 */
 	private boolean checkTwoFileSame() {
 		try {
 			return doc1.getRootElement().getValue().equals(doc2.getRootElement().getValue());
@@ -37,6 +49,13 @@ public class Visualization {
 		}
 	}
 	
+	/**
+	 * Create a HTML+CSS page contains the corpus. Create a box surround all the annotation which type you have specified.
+	 * (Doesn't work for the consecutive annotation temporarily)
+	 * 
+	 * @param annotationType : The type you want to display
+	 * @throws IOException
+	 */
 	public void display(String annotationType) throws IOException {
 		String newfile = "./result_annotations_" + annotationType + ".html";/*
 		XMLOutputter outp = new XMLOutputter();

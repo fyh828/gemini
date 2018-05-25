@@ -30,11 +30,18 @@ import org.jdom2.*;
 import org.jdom2.input.*;
 
 public class Main {
-	private final static Map<TwoAnnotation,Float> scoreboard = new HashMap<>();
+	/** Stock the type score between all type combinations in two files. The key of this map is the concatenation of name of two types.  */
+	private final static Map<String,Float> scoreboard = new HashMap<>();
+	
 	/** separator for the CSV file */
 	private final static char DEFAULT_SEPARATOR = ',';
-	/** if you use one xml file and one brat file, if your brat file uses '\r\n' as the line separator in counting index , this value should be 1.  */
+	
+	/** Stock all the type you want to visualize */
+	private final static List<String> visualize = new ArrayList<>();
+	
+	/** if you use one XML file and one brat file, if your brat file uses '\r\n' as the line separator in counting index , this value should be 1.  */
 	public static int transformNtoCRLF = 0;
+
 
     public static void main(String[] arg) throws JDOMException, IOException {
 
@@ -48,8 +55,6 @@ public class Main {
         boolean verbose = false;
         boolean createCSVfile = false;
         
-        List<String> visualize = new ArrayList<>();
-
         // scan the arguments
         for (int i=0 ; i<arg.length ; i++) {
             if (arg[i].equals("-bratfile1")) {
@@ -204,7 +209,6 @@ public class Main {
 
             if(visualize.size() > 0) {
             		Visualization vis;
-            		//tmp 
             		if(doc2 != null)
             			vis = new Visualization(doc1,doc2);
             		else 
@@ -245,7 +249,7 @@ public class Main {
                     System.out.println(file2[i]);
                 }
                 System.out.println("\n\nAlignment table :");
-                Annotation[][] corresp = alignAnnotations(file1, file2, alignmentType, verbose);
+                Annotation[][] corresp = alignAnnotations(file1, file2, alignmentType, scoreTypeMatching, verbose);
                 for (int i=0 ; i<corresp.length ; i++) {
                     System.out.println("\n[TH] " + file1[i] + " :");
                     for (int j=0 ; j<corresp[i].length ; j++) {
@@ -253,6 +257,11 @@ public class Main {
                             System.out.println("> [TR] " + corresp[i][j]);
                         }
                     }
+                }
+                System.out.println("\n\nType score table :");
+                System.out.println("TH | TR :  score ");
+                for(Entry<String,Float> e :scoreboard.entrySet()) {
+                		System.out.println(e.getKey() + " : "+ e.getValue());
                 }
             }
             long stopTime = System.currentTimeMillis();
@@ -283,7 +292,7 @@ public class Main {
      * @return a similarity score between 0 and 1.
      */
     public static float score(Annotation[] th, Annotation[] tr, String scoreType, String alignmentType, String scoreTypeMatching, boolean verbose, boolean createCSVfile) {
-        Annotation[][] correspTh = alignAnnotations(th, tr, alignmentType, verbose);
+        Annotation[][] correspTh = alignAnnotations(th, tr, alignmentType, scoreTypeMatching, verbose);
         
         float result = -1;
         float nbMatches = 0;
@@ -349,7 +358,7 @@ public class Main {
     public static float matchingAnnotationScore(Annotation[] th, Annotation[] tr, Annotation ann1, Annotation ann2, String scoreType, String scoreTypeMatching) {
         float result = 0;
         
-        if (ann1.intersect(ann2) && ann1.getType().equals(ann2.getType())) {
+        if (ann1.intersect(ann2) /*&& ann1.getType().equals(ann2.getType())*/) {
             if (scoreType.substring(0, 4).equals("weak")) {
                 result = 1;
             }
@@ -381,17 +390,19 @@ public class Main {
      * @return a float between 0 and 1
      */
     public static float matchingTypeScore(Annotation[] th, Annotation[] tr, String typeTh, String typeTr, String scoreTypeMatching) {
-    	float result = (float) 0.0;
+	    	float result = (float) 0.0;
+	    	// try to reduce calculate time
+	    	String ta = typeTh+typeTr;
+	    //	TwoAnnotation ta = new TwoAnnotation(typeTh,typeTr);
+	    	if(scoreboard.containsKey(ta)) {
+			return scoreboard.get(ta);
+		}
         if (scoreTypeMatching.equals("strictTypeMatching")) {           
            if (typeTh.equals(typeTr)){
               result = (float) 1.0;
+              scoreboard.put(ta, result);
            }
         } else if(scoreTypeMatching.equals("weightedTypeMatching")) {
-        		TwoAnnotation ta = new TwoAnnotation(typeTh,typeTr);
-        		if(scoreboard.containsKey(ta)) {
-        			result = scoreboard.get(ta);
-        		}
-        		else {
 	           Annotation[] newTh = oneTypeAnnotations(th, typeTh);
 	           Annotation[] newTr = oneTypeAnnotations(tr, typeTr);
 	           Map<Integer,Integer> changeStatus = new TreeMap<>();
@@ -447,12 +458,12 @@ public class Main {
 	           result = (float)intersection / union;
 	           //System.err.println("Intersection: "+intersection);
 	           //System.err.println("Union: "+union);
-	           scoreboard.put(ta, result);
-        		}
+	           
         	}
         else {
             System.out.println("The score matching type you chosen doesn't exist.");
         }
+        scoreboard.put(ta, result);
         return result;
     }
 
@@ -533,7 +544,7 @@ public class Main {
      *             greedyMatching  |   maxMatching
      * @return an annotations table with the annotations of {@code tr} in the cells corresponding with the annotations of {@code th}
      */
-    public static Annotation[][] alignAnnotations(Annotation[] th, Annotation[] tr, String algo, boolean verbose) {
+    public static Annotation[][] alignAnnotations(Annotation[] th, Annotation[] tr, String algo, String scoreTypeMatching, boolean verbose) {
     //	for(Annotation aa:th) System.err.println(aa);
 		Annotation[][] correspTh = new Annotation[th.length][tr.length];
 		// align one annotation with several depending on the annotations intersection if they have the same type
@@ -553,11 +564,11 @@ public class Main {
 			}
 			for (int i = 0; i < th.length; i++) {
 				for (int j = 0; j < tr.length; j++) {
-					if ((th[i].intersect(tr[j]) == true) && (th[i].type.equals(tr[j].type))) {
+					if ((th[i].intersect(tr[j]) == true)/* && (th[i].type.equals(tr[j].type))*/) {
 						 
 						DefaultWeightedEdge edge = new DefaultWeightedEdge();
 						g.addEdge(i, th.length + j, edge);
-						g.setEdgeWeight(edge, th[i].intersectionPercentage(tr[j]));
+						g.setEdgeWeight(edge, th[i].intersectionPercentage(tr[j]) * matchingTypeScore(th, tr, th[i].getType(), tr[j].getType(), scoreTypeMatching));
 						//System.out.println(i+" - "+(th.length+j) + " => " + g.getEdgeWeight(edge));//
 					}
 				}
@@ -584,11 +595,11 @@ public class Main {
 			float[][] t = new float[th.length][tr.length];
 			for (int i = 0; i < th.length; i++) {
 				for (int j = 0; j < tr.length; j++) {
-					if (th[i].type.equals(tr[j].type)) {
-						t[i][j] = th[i].intersectionPercentage(tr[j]);
-					} else {
-						t[i][j] = 0;
-					}//System.out.println(" ***th[i] = " + th[i] + " >>> ** t[i][j]= "+t[i][j]);
+					//if (th[i].type.equals(tr[j].type)) {
+						t[i][j] = th[i].intersectionPercentage(tr[j]) * matchingTypeScore(th, tr, th[i].getType(), tr[j].getType(), scoreTypeMatching);
+					//} else {
+					//	t[i][j] = 0;
+					//}//System.out.println(" ***th[i] = " + th[i] + " >>> ** t[i][j]= "+t[i][j]);
 				}
 			}
 
@@ -714,7 +725,6 @@ public class Main {
 
     /**
      * Create the Annotation's table corresponding to the XML file.
-     * It's a recursive function which will go through all tags of the XML file.
      *
      * @param node the xml tag
      * @param text the entire text of the xml file
@@ -729,6 +739,7 @@ public class Main {
 		//System.out.println("Text length : " + text.length());
 		Collections.reverse(l);
 		
+		// use a unique separator to localize label
 		String separator = "$";
 		while(text.contains(separator)) separator += "$";
 		//System.err.println(separator.length());
@@ -764,6 +775,12 @@ public class Main {
     		return (int)text.substring(0, position).chars().filter(ch -> ch=='\n').count();
     }
     
+    /**
+     * This is a recursive function which will go through all tags of the XML file.
+     * 
+     * @param node : The root node
+     * @return a list of all the node
+     */
     public static List<Element> getAllChildren(Element node) {
 		List<Element> l = new ArrayList<>();
 		l.add(node);
@@ -815,6 +832,12 @@ public class Main {
         return lignes;
     }
     
+    /**
+     * A Simple and quick check for Brat file format to avoid StringBoundException or other exception possible. 
+     * 
+     * @param The context of a brat file
+     * @return true if this file MAYBE complete, false if we find anywhere broken in this file.
+     */
     private static boolean checkBratFormat(String[] text) {
     		Set<String> se = new HashSet<>();
     		for(String s:text) {
@@ -843,6 +866,14 @@ public class Main {
     		return true;
     }
     
+    /**
+     * Put the result into a StringBuilder with the CSV format
+     * 
+     * @param sb : A StringBuilder
+     * @param ann1 : The first annotation
+     * @param ann2 : The second annotation
+     * @param score : The similarity between two annotations.
+     */
     private static void buildCSVFile(StringBuilder sb, Annotation ann1, Annotation ann2, float score) {
     		if(score > 1 || score < 0) 
 			throw new IllegalArgumentException(" UNKNOWN ERROR . Score should entre 0 and 1. Error Value : "+score);
@@ -859,6 +890,13 @@ public class Main {
 		sb.append(ann2.getEnd());sb.append("\n");
     }
     
+    /**
+     * Generate a CSV file from a StringBuilder.
+     * 
+     * @param sb : A StringBuilder
+     * @param scoreType : The score type you chosen, this parameter is used for the file name.
+     * @throws IOException
+     */
     private static void createCSVFile(StringBuilder sb, String scoreType) throws IOException {
     		String csvFile = "./result_annotations_"+scoreType+".csv";
 		File file = new File(csvFile);
@@ -916,14 +954,22 @@ public class Main {
 		}
 	}
 	*/
+    
+    /**
+     * Based on https://en.wikipedia.org/wiki/Comma-separated_values, avoid collision in CSV format
+     * 
+     * @param origin : The origin string
+     * @return A String without format collision
+     */
 	private static String applyFormatCSV(String origin) {
 		origin = origin.replace("\"", "\"\"");
 		if (origin.contains(",") || origin.contains("\n"))
 			origin = "\"" + origin + "\"";
 		return origin;
 	}
-    
-	private static class TwoAnnotation {
+	
+	// no need, instead of creating a new TwoAnnotation object, we can use a new String type1+type2. This will greatly save memory.
+    /*private static class TwoAnnotation {
 		final String a1;
 		final String a2;
 
@@ -947,5 +993,5 @@ public class Main {
 			return 17 * 31 + (31 * a1.hashCode() + a2.hashCode());
 		}
 	}
-
+	*/
 }

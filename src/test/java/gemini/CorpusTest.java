@@ -1,6 +1,6 @@
 package gemini;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
@@ -18,7 +18,7 @@ public class CorpusTest {
 		tr[0] = new Annotation("T1","Date",1,41,"TR_T1");
 		tr[1] = new Annotation("T2","Date",41,61,"TR_T2");
 		
-		assertEquals((Main.matchingAnnotationScore(th, tr, th[0], tr[0], "weightedprecision",  "weightedTypeMatching")),5.0/7,1e-15);
+		assertEquals((Main.matchingAnnotationScore(th, tr, th[0], tr[0], "weightedprecision",  "weightedTypeMatching")),5.0/7/2,1e-7);
 	}
 	
 	@Test
@@ -68,8 +68,14 @@ public class CorpusTest {
 	}
 	
 	//@Test
-	public void chineseNameTest() throws JDOMException, IOException {
-		String[] args1 = {"-xmlfile1","src/test/resources/nom_ZH_TH.xml","-bratfile2","src/test/resources/nom_ZH_TR.ann","-verbose","-visualize=Personne","-CRLF","-CSV","strictTypeMatching"};
+	public void chineseNameTest1() throws JDOMException, IOException {
+		String[] args1 = {"-xmlfile1","src/test/resources/nom_ZH_TH.xml","-bratfile2","src/test/resources/nom_ZH_TR.ann","-verbose","-visualize=Personne","-CRLF","-CSV","weightedTypeMatching"};
+		Main.main(args1);
+	}
+	
+	//@Test
+	public void chineseNameTest2() throws JDOMException, IOException {
+		String[] args1 = {"-xmlfile1","src/test/resources/test_fin_result.xml","-bratfile2","src/test/resources/test_fin(brat).ann","-verbose","-visualize=Personne","-CRLF","-CSV","strictTypeMatching"};
 		Main.main(args1);
 	}
 	
@@ -77,7 +83,7 @@ public class CorpusTest {
 	// problem de corpus
 	//@Test
 	public void chineseDateTest() throws JDOMException, IOException {
-		String[] args1 = {"-xmlfile1","src/test/resources/Date_ZH_TH.xml","-bratfile2","src/test/resources/Date_ZH_TR.ann","","-visualize=Date"};	
+		String[] args1 = {"-xmlfile1","src/test/resources/Date_ZH_TH.xml","-bratfile2","src/test/resources/Date_ZH_TR.ann","-CRLF","-visualize=Date","strictTypeMatching"};	
 		Main.main(args1);
 	}
 
