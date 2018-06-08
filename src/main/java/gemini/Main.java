@@ -249,14 +249,13 @@ public class Main {
                     System.out.println(file2[i]);
                 }
                 System.out.println("\n\nAlignment table :");
-                Annotation[][] corresp = alignAnnotations(file1, file2, alignmentType, scoreTypeMatching, verbose);
+                Annotation[] corresp = alignAnnotations(file1, file2, alignmentType, scoreTypeMatching, verbose);
                 for (int i=0 ; i<corresp.length ; i++) {
                     System.out.println("\n[TH] " + file1[i] + " :");
-                    for (int j=0 ; j<corresp[i].length ; j++) {
-                        if (corresp[i][j] != null) {
-                            System.out.println("> [TR] " + corresp[i][j]);
+                        if (corresp[i] != null) {
+                            System.out.println("> [TR] " + corresp[i]);
                         }
-                    }
+                    
                 }
                 System.out.println("\n\nType score table :");
                 System.out.println("TH | TR :  score ");
@@ -292,7 +291,7 @@ public class Main {
      * @return a similarity score between 0 and 1.
      */
     public static float score(Annotation[] th, Annotation[] tr, String scoreType, String alignmentType, String scoreTypeMatching, boolean verbose, boolean createCSVfile) {
-        Annotation[][] correspTh = alignAnnotations(th, tr, alignmentType, scoreTypeMatching, verbose);
+        Annotation[] correspTh = alignAnnotations(th, tr, alignmentType, scoreTypeMatching, verbose);
         
         float result = -1;
         float nbMatches = 0;
@@ -304,9 +303,9 @@ public class Main {
         // adjust the matches number depending on the 3rd parameter
         for (int i=0 ; i<correspTh.length ; i++) {
             //for (int j=0 ; j<correspTh[i].length ; j++) {
-            if (correspTh[i][0] != null) {       
-            		score = matchingAnnotationScore(th, tr, th[i], correspTh[i][0], scoreType, scoreTypeMatching);
-            		if(createCSVfile)	buildCSVFile(sb, th[i], correspTh[i][0], score);
+            if (correspTh[i] != null) {       
+            		score = matchingAnnotationScore(th, tr, th[i], correspTh[i], scoreType, scoreTypeMatching);
+            		if(createCSVfile)	buildCSVFile(sb, th[i], correspTh[i], score);
                 nbMatches += score;
             }
             //}
@@ -544,9 +543,9 @@ public class Main {
      *             greedyMatching  |   maxMatching
      * @return an annotations table with the annotations of {@code tr} in the cells corresponding with the annotations of {@code th}
      */
-    public static Annotation[][] alignAnnotations(Annotation[] th, Annotation[] tr, String algo, String scoreTypeMatching, boolean verbose) {
+    public static Annotation[] alignAnnotations(Annotation[] th, Annotation[] tr, String algo, String scoreTypeMatching, boolean verbose) {
     //	for(Annotation aa:th) System.err.println(aa);
-		Annotation[][] correspTh = new Annotation[th.length][tr.length];
+		Annotation[] correspTh = new Annotation[th.length];
 		// align one annotation with several depending on the annotations intersection if they have the same type
 		if (algo.equals("maxMatching")) {
 			// Create a simple weighted graph:
@@ -579,7 +578,7 @@ public class Main {
 			Iterator<DefaultWeightedEdge> iter = matching.iterator();
 			while (iter.hasNext()) {
 				DefaultWeightedEdge edge = (DefaultWeightedEdge) iter.next();
-				correspTh[g.getEdgeSource(edge)][0] = tr[g.getEdgeTarget(edge) - th.length];
+				correspTh[g.getEdgeSource(edge)] = tr[g.getEdgeTarget(edge) - th.length];
 				/*
 				if (verbose) {
 					System.out.println("Annotation " + (g.getEdgeTarget(edge) - th.length) + " of TR associated with annotation " + g.getEdgeSource(edge) + " of TH.");
@@ -620,7 +619,7 @@ public class Main {
 				if(max == 0)
 					break;
 				// add the match in the matches' table
-				correspTh[imax][0] = tr[jmax];
+				correspTh[imax] = tr[jmax];
 				/*
 				if (verbose && max!=0) {
 					System.out.println("Annotation " + jmax + " of TR associated with annotation " + imax + " of TH.");
@@ -771,6 +770,7 @@ public class Main {
 		}
 		return ann;
     }
+    
     private static int countNbLinesBeforePosition(String text, int position) {
     		return (int)text.substring(0, position).chars().filter(ch -> ch=='\n').count();
     }
@@ -839,7 +839,8 @@ public class Main {
      * @return true if this file MAYBE complete, false if we find anywhere broken in this file.
      */
     private static boolean checkBratFormat(String[] text) {
-    		Set<String> se = new HashSet<>();
+    		// have to use map instead
+    		//Set<String> se = new HashSet<>();
     		for(String s:text) {
     			String[] s1 = s.split("\t");
     			if(s1.length != 3)
@@ -858,11 +859,13 @@ public class Main {
     			}
     			if(s1[0].equals("") || s1[2].equals("") || s2[0].equals(""))
     				return false;
-    			se.add(s1[0]);
+    			//se.add(s1[0]);
     		}
+    		/*
     		// Avoid duplicate id
     		if(se.size() != text.length)
     			return false;
+    		*/
     		return true;
     }
     

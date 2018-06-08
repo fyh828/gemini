@@ -3,7 +3,7 @@
  */
 
 /*
-Copyright 2017-2018 Coline Mignot, Philippe Gambette
+Copyright 2017-2018 Coline Mignot, Philippe Gambette, Yuheng FENG
 
 This file is part of Gemini.
 
@@ -23,6 +23,12 @@ This file is part of Gemini.
 
 package gemini;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.jdom2.Attribute;
+
 public class Annotation{
 
     public String id;
@@ -30,6 +36,7 @@ public class Annotation{
     public int start;
     public int end;
     public String label;
+    private Map<String,String> attributes = new HashMap<>();
 
     public Annotation(String id, String type, int start, int end, String label){
         this.id = id;
@@ -37,6 +44,17 @@ public class Annotation{
         this.start = start;
         this.end = end;
         this.label = label;
+    }
+    
+    public Annotation(String id, String type, int start, int end, String label, List<Attribute> attributes){
+    		this.id = id;
+        this.type = type;
+        this.start = start;
+        this.end = end;
+        this.label = label;
+        for(Attribute att:attributes)
+        		this.attributes.put(att.getName(), att.getValue());
+        //System.out.println(this.attributes);
     }
 
     public void setId(String id){
@@ -72,7 +90,9 @@ public class Annotation{
     }
 
     public String toString(){
-        return id + " : " + label + " (" + type + " ; " + start + "-" + end + ")";
+    		if(attributes.size() == 0)
+    			return id + " : " + label + " (" + type + " ; " + start + "-" + end + ")";
+    		return id + " : " + label + " (" + type + " ; " + start + "-" + end + ") " + attributes.toString();
     }
 
     /**
@@ -119,6 +139,10 @@ public class Annotation{
      */
     public float intersectionPercentage(Annotation a) {
         return (float) intersectionSize(a) / ( (a.getEnd()-a.getStart()) + (this.end-this.start) - intersectionSize(a) );
+    }
+    
+    public String getAttribute(String type) {
+    		return attributes.get(type);
     }
     
     @Override

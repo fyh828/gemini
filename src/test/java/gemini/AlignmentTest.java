@@ -90,6 +90,42 @@ public class AlignmentTest {
 		System.out.println("***********************");
 		System.out.println("Score2 : " + score2);
 	}
+	
+	@Test
+	public void twoEdgesHaveTheSameWeight() {
+		SimpleWeightedGraph<Integer, DefaultWeightedEdge> g = new SimpleWeightedGraph<Integer, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+
+		g.addVertex(1);  
+		g.addVertex(2);  
+		g.addVertex(3);  
+		g.addVertex(4);  
+		
+        DefaultWeightedEdge edge1 = new DefaultWeightedEdge();
+        g.addEdge(1,3,edge1);
+        g.setEdgeWeight(edge1, 3);
+       
+        DefaultWeightedEdge edge2 = new DefaultWeightedEdge();
+        g.addEdge(2,3,edge2);
+        g.setEdgeWeight(edge2, 6);
+        
+        DefaultWeightedEdge edge3 = new DefaultWeightedEdge();
+        g.addEdge(2,4,edge3);   
+        g.setEdgeWeight(edge3, 3);
+        
+        
+        Set<Integer> left = new HashSet<>();
+        Set<Integer> right = new HashSet<>();
+ 
+        left.add(1);
+        left.add(2);
+        right.add(3);
+        right.add(4);
+        
+        MaximumWeightBipartiteMatching<Integer, DefaultWeightedEdge> b = new MaximumWeightBipartiteMatching<Integer, DefaultWeightedEdge>(g, left, right);
+        Set<DefaultWeightedEdge> matching = b.getMatching().getEdges();
+        Set<DefaultWeightedEdge> solution = new HashSet<>(Arrays.asList(edge1,edge3));
+        assertEquals(matching,solution);
+	}
 
 	
 }
