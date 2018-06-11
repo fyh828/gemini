@@ -201,6 +201,20 @@ public class TEITools {
 			}
 		return l;
 	}
+
+	public static Annotation[] removeOverlap(Annotation[] anns) {
+		if(anns.length == 0)
+			return anns;
+		List<Annotation> result = new ArrayList<>();
+		result.add(anns[0]);
+		for(int i=1;i<anns.length;i++) {
+			// Consecutive ?
+			if(anns[i].getStart() > result.get(result.size()-1).getEnd()) {
+				result.add(anns[i]);
+			}
+		}
+		return result.toArray(new Annotation[result.size()]);
+	}
     
     /*  // A tool for debug
 	  public static int indexOfDifference(String str1, String str2) {
