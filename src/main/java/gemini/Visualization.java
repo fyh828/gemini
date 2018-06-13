@@ -46,7 +46,7 @@ public class Visualization {
 			return doc1.getRootElement().getValue().equals(doc2.getRootElement().getValue());
 		}
 		catch(NullPointerException e) {
-			throw new IllegalArgumentException(" Both two files must be XML file. ");
+			throw new IllegalArgumentException(" The first file must be a XML file. ");
 		}
 	}
 	
@@ -58,8 +58,8 @@ public class Visualization {
 	 * @throws IOException
 	 */
 	public void display(String annotationType) throws IOException {
-		if(!checkTwoFileSame()) {
-			throw new IllegalArgumentException(" Can't Visualize. After removing XML tags, two texts aren't exactly the same. ");
+		if(doc2 != null && !checkTwoFileSame()) {
+			throw new IllegalArgumentException(" Can't Visualize. After removing XML tags, two origin texts aren't exactly same. ");
 		}
 		
 		String newfile = "./result_annotations_" + annotationType + ".html";/*
@@ -101,6 +101,11 @@ public class Visualization {
         Annotation[] ann1 = TEITools.removeOverlap(f1);
         Annotation[] ann2 = TEITools.removeOverlap(f2);
         //for(Annotation ann:f1) System.out.println(ann);
+		if(ann1.length == 0  && ann2.length == 0) { 
+			System.err.println(" Nothing to visualize ");
+			return;
+		}
+		
         addCSSclass(annotationType, result, ann1, ann2, attributeType);
         createHTMLfile(annotationType, newfile, result, attributeType);
 	}
@@ -232,14 +237,15 @@ public class Visualization {
         }
         
         if(index_attribute_correct != null)
+        		//System.err.println(index_attribute_correct);
         		for(Integer in:index_attribute_correct) {
-        			if(in >= 0) {
+        			if(in > 0) {
         				//if(changeStatus.get(in)!=5) throw new IllegalArgumentException(" Error: "+changeStatus.get(in));
         				changeStatus.put(in, 15);
         			}
         			else {
         				//if(changeStatus.get(-in)!=5) throw new IllegalArgumentException(" Error: "+changeStatus.get(-in));
-        				changeStatus.put(-in, 25);
+        				changeStatus.put(-in-1, 25);
         			}
         		}
         //System.out.println(index_attribute_correct);
@@ -309,7 +315,7 @@ public class Visualization {
 	        			if(entrys[i+1].getValue() == 12)
 	        				result.insert(entrys[i].getKey() + nbLetterBefore, "<span class=\"TT1_sta\"><span class=\"TT2_all\">");
 	        			if(entrys[i+1].getValue() == 8) {
-	        				if(index_attribute_correct.size() > 0) {
+	        				if(index_attribute_correct != null) {
 	        					if(entrys[i].getValue() == 25) 
 		        					result.insert(entrys[i].getKey() + nbLetterBefore, "<span class=\"TT1_all\"><span class=\"TT2_all\">");
 	        					else if(entrys[i].getValue() == 15) {
@@ -403,14 +409,13 @@ public class Visualization {
 				if(ann1[i].getEnd() - ann2[j].getEnd() == 0) {
 					attr1_empty = ann1[i].getAttribute(attributeType) == null || ann1[i].getAttribute(attributeType).equals("");
 					attr2_empty = ann2[j].getAttribute(attributeType) == null || ann2[j].getAttribute(attributeType).equals("");
-					
 					if(!attr1_empty && !attr2_empty) {
 						if(ann1[i].getAttribute(attributeType).equals(ann2[j].getAttribute(attributeType)))
 							result.add(ann1[i].getStart());
 						
 					}
 					else if(attr1_empty && attr2_empty)
-						result.add(0-ann1[i].getStart());
+						result.add(-1-ann1[i].getStart());
 				}
 				i++;j++;
 				continue;

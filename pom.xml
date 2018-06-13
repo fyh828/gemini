@@ -1,4 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+  </properties>
   <modelVersion>4.0.0</modelVersion>
   <groupId>gemini</groupId>
   <artifactId>gemini</artifactId>
@@ -27,6 +32,7 @@
 	
   </dependencies>
   <build>
+
     <sourceDirectory>src</sourceDirectory>
     <resources>
       <resource>
@@ -38,11 +44,17 @@
     </resources>
     <plugins>
       <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.7.0</version>
-        <configuration>
-          <release>9</release>
-        </configuration>
+	      <artifactId>maven-assembly-plugin</artifactId>
+      <configuration>
+        <archive>
+          <manifest>
+            <mainClass>gemini.Main</mainClass>
+          </manifest>
+        </archive>
+        <descriptorRefs>
+          <descriptorRef>jar-with-dependencies</descriptorRef>
+        </descriptorRefs>
+      </configuration>
       </plugin>
     </plugins>
   </build>

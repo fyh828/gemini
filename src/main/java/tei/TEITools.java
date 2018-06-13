@@ -17,6 +17,7 @@ import org.jdom2.input.SAXBuilder;
 
 import gemini.Annotation;
 import gemini.Main;
+import gemini.Visualization;
 
 public class TEITools {
 	
@@ -24,6 +25,7 @@ public class TEITools {
 		
 		if(args.length < 3) {
 			System.out.println(" Usage: TEITools [path_to_TEI_File_1] [path_to_TEI_File_2] [Type_you_want_to_compare] [Attribute 1,2,3...(optional)]");
+			System.out.println(" You can add '-visualize=' before the attribute to visualize the result of this attribute in a HTML file. ");
 			return;
 		}
 		if(!new File(args[0]).isFile() || !new File(args[1]).isFile()) {
@@ -36,32 +38,50 @@ public class TEITools {
 		String type = args[2];
 		
 		List<String> attributes = null;
+		List<String> visualize = new ArrayList<>();
+		
 		if(args.length == 3) {
 			System.out.println(" Compare with default attributes: lemma, type, subtype ... ");
 			attributes = new ArrayList<>(Arrays.asList("lemma","type","subtype","n","xml:id"));
 		}
 		else {
+			attributes = new ArrayList<>();
 			for(int i=3;i<args.length;i++) {
-				attributes = new ArrayList<>();
-				attributes.add(args[i]);
+				if(args[i].startsWith("-visualize=")) {
+					visualize.add(args[i].substring(11));
+					attributes.add(args[i].substring(11));
+				}
+				else
+					attributes.add(args[i]);
 			}
 			attributes = attributes.stream().distinct().collect(Collectors.toList());
+			visualize = visualize.stream().distinct().collect(Collectors.toList());
 		}
 		
-		compareTEI(fileTH, fileTR, type, attributes);
-	}
-
-	private static void compareTEI(String fileTH, String fileTR, String type, List<String> attributes)
-			throws JDOMException, IOException {
 		SAXBuilder sxb = new SAXBuilder();
 		Document docTH = sxb.build(new File(fileTH)); 
 		Document docTR = sxb.build(new File(fileTR)); 
+		compareTEI(docTH, docTR, type, attributes);
+		
+		if(visualize.size() > 0) {
+			Visualization vis = new Visualization(docTH,docTR);
+			for(String attributeType : visualize)
+				vis.displayTEI(type, attributeType);
+		}
+	}
+
+	private static void compareTEI(Document docTH, Document docTR, String type, List<String> attributes) throws IOException {
+		
 		if(!checkTwoTEIFilesSame(docTH,docTR))
 			throw new IllegalArgumentException(" Two TEI origin text are different! ");
 		
 		
 		Annotation[] annTH = singleTypeAnnotationFromTEI(docTH, type);
 		Annotation[] annTR = singleTypeAnnotationFromTEI(docTR, type);
+		if(annTH.length == 0  && annTR.length == 0) { 
+			System.err.println(" There isn't any annotation with type "+type);
+			return;
+		}
 		//for(Annotation ann:annTH) System.out.println(ann);
 		System.out.println("Computing all similarity scores with type \""+type+"\" : ");
         System.out.println("Similarity score (weak precision) : " + Main.score(annTH, annTR, "weakprecision", "maxMatching", "strictTypeMatching", false, false)

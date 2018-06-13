@@ -25,6 +25,9 @@ import java.util.Map.Entry;
 
 //import edu.princeton.cs.algs4.*;
 import org.jgrapht.graph.*;
+
+import tei.TEITools;
+
 import org.jgrapht.alg.matching.*;
 import org.jdom2.*;
 import org.jdom2.input.*;
@@ -60,48 +63,48 @@ public class Main {
             if (arg[i].equals("-bratfile1")) {
             		if(i == arg.length-1 || !new File(arg[i+1]).isFile())
             			throw new IllegalArgumentException("Missing brat file 1 or the file doesn't exist.");
-                bratfile1 = arg[i+1];
+                bratfile1 = arg[++i];
                 if(!new File(bratfile1).getName().endsWith(".ann"))
                 		throw new IllegalArgumentException("File extension error.");
             }
             else if (arg[i].equals("-xmlfile1")) {
 	            	if(i == arg.length-1 || !new File(arg[i+1]).isFile())
 	        			throw new IllegalArgumentException("Missing xml file 1 or the file doesn't exist.");
-                xmlfile1 = arg[i+1];
+                xmlfile1 = arg[++i];
                 if(!new File(xmlfile1).getName().endsWith(".xml"))
             			throw new IllegalArgumentException("File extension error.");
             }
 
-            if (arg[i].equals("-bratfile2")) {
+            else if (arg[i].equals("-bratfile2")) {
 	            	if(i == arg.length-1 || !new File(arg[i+1]).isFile())
 	        			throw new IllegalArgumentException("Missing brat file 2 or the file doesn't exist.");
-                bratfile2 = arg[i+1];
+                bratfile2 = arg[++i];
                 if(!new File(bratfile2).getName().endsWith(".ann"))
             			throw new IllegalArgumentException("File extension error.");
             }
             else if (arg[i].equals("-xmlfile2")) {
 	            	if(i == arg.length-1 || !new File(arg[i+1]).isFile())
 	        			throw new IllegalArgumentException("Missing xml file 2 or the file doesn't exist.");
-                xmlfile2 = arg[i+1];
+                xmlfile2 = arg[++i];
                 if(!new File(xmlfile2).getName().endsWith(".xml"))
             			throw new IllegalArgumentException("File extension error.");
             }
 
-            if (arg[i].equals("weakprecision") || arg[i].equals("weakrecall") || arg[i].equals("weakF-measure")
+            else if (arg[i].equals("weakprecision") || arg[i].equals("weakrecall") || arg[i].equals("weakF-measure")
                     || arg[i].equals("strictprecision") || arg[i].equals("strictrecall") || arg[i].equals("strictF-measure")
                     || arg[i].equals("weightedprecision") || arg[i].equals("weightedrecall") || arg[i].equals("weightedF-measure")) {
                 scoreType = arg[i];
             }
 
-            if (arg[i].equals("weightedTypeMatching") || arg[i].equals("strictTypeMatching")) {
+            else if (arg[i].equals("weightedTypeMatching") || arg[i].equals("strictTypeMatching")) {
                 scoreTypeMatching = arg[i];
             }
 
-            if (arg[i].equals("greedyMatching") || arg[i].equals("maxMatching")) {
+            else if (arg[i].equals("greedyMatching") || arg[i].equals("maxMatching")) {
                 alignmentType = arg[i];
             }
 
-            if (arg[i].equals("--help")) {
+            else if (arg[i].equals("--help")) {
                 System.out.println("To indicate files to compare :" +
                         "\n -bratfile1   : followed by first file's name (.ann)" +
                         "\n -xmlfile1    : followed by first file's name (.xml)" +
@@ -131,21 +134,34 @@ public class Main {
                         "\n   of intersection between the two annotation types.");
             }
 
-            if (arg[i].equals("-verbose")) {
+            else if (arg[i].equals("-verbose")) {
                 verbose = true;
             }
             
-            if (arg[i].equals("-CSV")) {
+            else if (arg[i].equals("-CSV")) {
         			createCSVfile = true;
             }
-            if (arg[i].startsWith("-visualize=")){
+            else if (arg[i].startsWith("-visualize=")){
             		if(arg[i].substring(11).length() == 0)
 	        			throw new IllegalArgumentException("Missing type you want to visualize.");
             		visualize.add(arg[i].substring(11));
             }
             
-            if (arg[i].equals("-CRLF")){
+            else if (arg[i].equals("-CRLF")){
             		transformNtoCRLF = 1;
+            }
+            
+            else if (arg[i].equals("-TEI")) {
+             	if(i!=0 || i == arg.length-1) {
+             		System.err.println(" TEI Usage: Main -TEI [path_to_TEI_File_1] [path_to_TEI_File_2] [Type_you_want_to_compare] [Attribute 1,2,3...(optional)]");
+             		return;
+             	}
+            		TEITools.main(Arrays.copyOfRange(arg, 1, arg.length));
+            		return;
+            }
+            
+            else {
+            		System.err.println("Unknown command: "+arg[i]+" . Ignored. ");
             }
         }
         

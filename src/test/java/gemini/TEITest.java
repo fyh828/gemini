@@ -20,11 +20,15 @@ public class TEITest {
 		String fileTH = "src/test/resources/TEI/1e_jour_de_pralognan_au_refuge_de_la_lei_[auto].xml";
 		String fileTR = "src/test/resources/TEI/1e_jour_de_pralognan_au_refuge_de_la_lei_[manuelle].xml";
 		String type = "w";
-		String[] args = {fileTH,fileTR,type};
+		String attribute1 = "type";
+		String attribute2 = "-visualize=subtype";
+		String attribute3 = "-visualize=aaa";
+		String[] args = {fileTH,fileTR,type,attribute1,attribute2,attribute3};
+		//String[] args = {fileTH,fileTR,type,attribute3};
 		TEITools.main(args);
 	}
 	
-	@Test
+	//@Test
 	public void TEITestVisualization() throws JDOMException, IOException {
 		String fileTH = "src/test/resources/TEI/1e_jour_de_pralognan_au_refuge_de_la_lei_[auto].xml";
 		String fileTR = "src/test/resources/TEI/1e_jour_de_pralognan_au_refuge_de_la_lei_[manuelle].xml";
@@ -35,5 +39,18 @@ public class TEITest {
 		vis.displayTEI("geogName","type");
 		vis.displayTEI("geogName","aaa");
 		vis.displayTEI("placeName","id");
+	}
+	
+	//@Test
+	public void SimpleTEITest3() throws JDOMException, IOException {
+		String fileTH = "src/test/resources/TEI/1e_jour_de_pralognan_au_refuge_de_la_lei_[auto].xml";
+		String fileTR = "src/test/resources/TEI/1e_jour_de_pralognan_au_refuge_de_la_lei_[manuelle].xml";
+		String type = "w";
+		String attribute1 = "type";
+		String attribute2 = "-visualize=subtype";
+		String attribute3 = "-visualize=aaa";
+		String[] args = {"-TEI",fileTH,fileTR,type,attribute1,attribute2,attribute3};
+		//String[] args = {fileTH,fileTR,type,attribute3};
+		Main.main(args);
 	}
 }
