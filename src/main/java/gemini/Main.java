@@ -366,7 +366,7 @@ public class Main {
      * @param ann2 the second annotation to compare
      * @param scoreType the score type to choose between these paameters :
      *                  weakprecision       |   weakrecall      |   weakF-measure
-     *                  strcitprecision     |   strictrecall    |   strictF-measure
+     *                  strictprecision     |   strictrecall    |   strictF-measure
      *                  weightedprecision   |   weightedrecall  |   weightedF-measure
      * @return a 0 or 1 if the score type is weak or strict, or a float between 0 and 1 if the score type is weighted
      */

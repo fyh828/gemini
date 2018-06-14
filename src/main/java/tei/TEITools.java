@@ -42,7 +42,7 @@ public class TEITools {
 		
 		if(args.length == 3) {
 			System.out.println(" Compare with default attributes: lemma, type, subtype ... ");
-			attributes = new ArrayList<>(Arrays.asList("lemma","type","subtype","n","xml:id"));
+			attributes = new ArrayList<>(Arrays.asList("lemma","type","subtype","n","id"));
 		}
 		else {
 			attributes = new ArrayList<>();
@@ -97,15 +97,26 @@ public class TEITools {
         computeAttributeScore(annTH,annTR,type,attributes);
 	}
 
+    /**
+     * Calculate a similarity of attribute score with specific type between two tables of annotations.
+     *
+     * @param annTH : the first annotation table
+     * @param annTR : the second annotation table
+     * @param type : the type you want to compare
+     * @param attributes : a list of attributes with the type given you want to compare
+     * @return a 0 or 1 if the score type is weak or strict, or a float between 0 and 1 if the score type is weighted
+     */
 	public static void computeAttributeScore(Annotation[] annTH, Annotation[] annTR, String type, List<String> attributes){
 		boolean attr1_empty,attr2_empty;
 		int nbMatches,countTH,countTR;
-		
+		if(annTH.length!=annTR.length)
+			annTR = Main.alignAnnotations(annTH, annTR, "maxMatching", "strictTypeMatching", false);
 		for(String attribute:attributes) {
 			nbMatches = 0;
 			countTH = 0;
 			countTR = 0;
 			for(int i=0;i<annTH.length;i++) {
+				if(annTR[i] == null) continue;
 				attr1_empty = annTH[i].getAttribute(attribute) == null || annTH[i].getAttribute(attribute).equals("");
 				attr2_empty = annTR[i].getAttribute(attribute) == null || annTR[i].getAttribute(attribute).equals("");
 				//System.out.println(annTH[i].getAttribute(type));
@@ -139,12 +150,18 @@ public class TEITools {
 		return normalizeReturn(normalizeSpace(d1.getRootElement().getValue())).equals(normalizeReturn(normalizeSpace(d2.getRootElement().getValue())));
 	}
 	
+    /**
+     * Create the Annotation's table corresponding to a TEI file with a specific type.
+     *
+     * @param doc : The TEI document parsed by SAXBuilder
+     * @param type : The type you want to compare
+     * @return the Annotation's table corresponding to the the TEI file
+     */
     public static Annotation[] singleTypeAnnotationFromTEI(Document doc, String type) {
 		Element node = doc.getRootElement().clone();
 		String text = node.getValue();
 		List<Element> l = Main.getAllChildren(node);
 		int count = 0, currentPosition=0, index_start=0;
-		
 		
 		//System.out.println("Text length : " + text.length());
 		Collections.reverse(l);
@@ -191,16 +208,27 @@ public class TEITools {
     }
     
 	
-	
+    /**
+     * Remove the excess spaces and carriage returns
+     *
+     * @param origin : a String which contains the origin text
+     * @return a String which contains the text after normalization
+     */
 	public static String normalizeSpace(String origin) {
 		origin = origin.replaceAll("\r\n","\n");
-		origin = origin.replaceAll("\t", "").replaceAll(" ", "");
+		origin = origin.replaceAll("\n\t+", "\n").replaceAll("\n +", "\n").replaceAll("([a-zA-Z])( |\t)+([a-zA-Z])", "$1 $3");
 		origin = origin.replaceAll("^\n+", "");
 		origin = origin.replaceAll("\n+", "\n");
 		origin = origin.replaceAll("\n\\.\n", ".\n");
 		return origin;
 	}
 	
+    /**
+     * Normalize the space before and after punctuation
+     *
+     * @param origin : a String which contains the origin text
+     * @return a String which contains the text after normalization
+     */
 	public static String normalizeReturn(String origin) {
 		origin = origin.replaceAll("\n", " ");
 		origin = origin.replaceAll(" (,|\\.) ", "$1 ");
@@ -221,7 +249,13 @@ public class TEITools {
 			}
 		return l;
 	}
-
+    
+    /**
+     * Remove the overlapping annotations.
+     *
+     * @param anns : annotation table
+     * @return an annotation table which every annotation is well separated.
+     */
 	public static Annotation[] removeOverlap(Annotation[] anns) {
 		if(anns.length == 0)
 			return anns;

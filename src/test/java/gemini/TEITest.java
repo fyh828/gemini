@@ -53,4 +53,15 @@ public class TEITest {
 		//String[] args = {fileTH,fileTR,type,attribute3};
 		Main.main(args);
 	}
+	
+	//@Test
+	public void TEICorpusTest1() throws JDOMException, IOException {
+		String fileTH = "src/test/resources/TEI/La_Republique_dUtopie1.xml";
+		String fileTR = "src/test/resources/TEI/La_Republique_dUtopie2.xml";
+		String type = "div";
+		String attribute1 = "n";
+		String attribute2 = "-visualize=type";
+		String[] args = {"-TEI",fileTH,fileTR,type,attribute1,attribute2};
+		Main.main(args);
+	}
 }

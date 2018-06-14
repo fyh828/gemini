@@ -51,11 +51,11 @@ public class Visualization {
 	}
 	
 	/**
-	 * Create a HTML+CSS page contains the corpus. Create a box surround all the annotation which type you have specified.
+	 * Create a HTML+CSS page contains the corpus(format XML). Create a box surround all the annotation which type you have specified.
 	 * (Doesn't work for the consecutive annotation temporarily)
 	 * 
 	 * @param annotationType : The type you want to display
-	 * @throws IOException
+	 * @throws IOException : If we can't create a file
 	 */
 	public void display(String annotationType) throws IOException {
 		if(doc2 != null && !checkTwoFileSame()) {
@@ -90,6 +90,14 @@ public class Visualization {
         createHTMLfile(annotationType, newfile, result, null);
 	}
 	
+	/**
+	 * Create a HTML+CSS page contains the corpus(format TEI). Create a box surround all the annotation which type you have specified.
+	 * Highlight the result of comparison of attributes.
+	 * 
+	 * @param annotationType : The type you want to display
+	 * @param attributeType : The attribute you want to compare
+	 * @throws IOException : If we can't create a file
+	 */
 	public void displayTEI(String annotationType, String attributeType) throws IOException {
 		String newfile = "./result_TEI_" + annotationType + "_" + attributeType + ".html";
 		
@@ -100,7 +108,6 @@ public class Visualization {
         
         Annotation[] ann1 = TEITools.removeOverlap(f1);
         Annotation[] ann2 = TEITools.removeOverlap(f2);
-        //for(Annotation ann:f1) System.out.println(ann);
 		if(ann1.length == 0  && ann2.length == 0) { 
 			System.err.println(" Nothing to visualize ");
 			return;
@@ -211,7 +218,16 @@ public class Visualization {
 		
 		//System.out.println(htmlPage);
 	}
-
+	
+	/**
+	 * Set each annotation into different CSS classes depends on their status. The status represents the situation between two annotations.
+	 * 
+	 * @param annotationType : The type you want to visualize
+	 * @param result : the origin text
+	 * @param ann1 : Arrays of annotations in file 1
+	 * @param ann2 : Arrays of annotations in file 2
+	 * @param attributeType : The attribute you want to compare
+	 */
 	private void addCSSclass(String annotationType, StringBuilder result, Annotation[] ann1, Annotation[] ann2, String attributeType) {
 		Map<Integer,Integer> changeStatus = new TreeMap<>();
         // status=1 : 1 start;		status=2 : 2 start;		status=3 : 1 end;		status=4 : 2 end;
@@ -248,7 +264,6 @@ public class Visualization {
         				changeStatus.put(-in-1, 25);
         			}
         		}
-        //System.out.println(index_attribute_correct);
         int nbLetterBefore = 0;
         int textStatus = 0;
         int i,c;
@@ -400,6 +415,16 @@ public class Visualization {
         }catch(StringIndexOutOfBoundsException e) {}
 	}
 	
+	/**
+	 * If the index of two annotations are the same, compare the attribute of these two annotations.
+	 * If their attribute are same, put the index into a list.
+	 * If both attributes are empty or null, put the opposite number of index into the list. When visualizing annotations, these attributes will not be considered as wrong.
+	 * 
+	 * @param ann1 : Arrays of annotations in file 1
+	 * @param ann2 : Arrays of annotations in file 2
+	 * @param attributeType : The attribute you want to compare
+	 * @return a list of index
+	 */
 	private List<Integer> compareAttributes(Annotation[] ann1, Annotation[] ann2, String attributeType) {
 		int i=0,j=0;
 		boolean attr1_empty,attr2_empty;
@@ -409,6 +434,7 @@ public class Visualization {
 				if(ann1[i].getEnd() - ann2[j].getEnd() == 0) {
 					attr1_empty = ann1[i].getAttribute(attributeType) == null || ann1[i].getAttribute(attributeType).equals("");
 					attr2_empty = ann2[j].getAttribute(attributeType) == null || ann2[j].getAttribute(attributeType).equals("");
+					//System.err.println(ann1[i] + " ====  "+ ann2[j]);
 					if(!attr1_empty && !attr2_empty) {
 						if(ann1[i].getAttribute(attributeType).equals(ann2[j].getAttribute(attributeType)))
 							result.add(ann1[i].getStart());
@@ -437,6 +463,11 @@ public class Visualization {
 		return origin;
 	}
 	
+	/**
+	 * This function is only used for the floating window in HTML page. If a file name is too long, we remove several characters in the middle of it's name.
+	 * 
+	 * @param path : The path of a file
+	 */
 	private static String displayFilePath(String[] path) {
 		String result = path[path.length-1];
 		if(result.length()>40){
