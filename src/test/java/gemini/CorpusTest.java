@@ -16,13 +16,13 @@ public class CorpusTest {
 	private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
 	private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
 	
-	@Before
+	//@Before
 	public void setUpStreams() {
 	    System.setOut(new PrintStream(outContent));
 	    System.setErr(new PrintStream(errContent));
 	}
 
-	@After
+	//@After
 	public void cleanUpStreams() {
 	    System.setOut(null);
 	    System.setErr(null);
@@ -56,7 +56,7 @@ public class CorpusTest {
 				(float) 10 / 16, 1e-15);
 	}
 
-	@Test
+	////@Test
 	public void simpleScoreTest2() throws JDOMException, IOException {
 		// String[] args1 =
 		// {"-xmlfile1","src/test/resources/nameTest3.xml","-xmlfile2","src/test/resources/nameTest4.xml","weightedTypeMatching","-verbose"};
@@ -67,7 +67,7 @@ public class CorpusTest {
 				(float) (9.0 / 16 + 5.0 / 19) * 14 / 35 / 2, 1e-15);
 	}
 
-	@Test
+	////@Test
 	public void simpleScoreTest3() throws JDOMException, IOException {
 		Annotation[] th = new Annotation[3];
 		Annotation[] tr = new Annotation[1];
@@ -116,6 +116,18 @@ public class CorpusTest {
 	public void chineseDateTest() throws JDOMException, IOException {
 		String[] args1 = { "-xmlfile1", "src/test/resources/Date_ZH_TH.xml", "-bratfile2",
 				"src/test/resources/Date_ZH_TR.ann", "-CRLF", "-visualize=Date", "strictTypeMatching" };
+		Main.main(args1);
+	}
+	
+	//https://stackoverflow.com/questions/5709232/how-do-i-include-etc-in-xml-attribute-values
+	@Test
+	public void cscTest() throws JDOMException, IOException {
+		String[] args1 = { "-xmlfile1", "src/test/resources/Juin/80jours_csc_csc.xml", "-xmlfile2",
+				"src/test/resources/Juin/80jours_csc_csc-pers.xml","maxaMatching","weakprecision","strictTypeMatching","-visualize=date" };
+		String[] args2 = { "-xmlfile1", "src/test/resources/Juin/80jours_extrait1_csc_csc.xml", "-xmlfile2",
+				"src/test/resources/Juin/80jours_extrait1_csc_csc-pers.xml", "-visualize=date" };
+		String[] argsTEI = { "-TEI", "src/test/resources/Juin/80jours_csc_csc.xml", 
+				"src/test/resources/Juin/80jours_csc_csc-pers.xml", "persName", /*"-visualize=when"*/ };
 		Main.main(args1);
 	}
 

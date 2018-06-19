@@ -59,7 +59,11 @@ public class Visualization {
 	 */
 	public void display(String annotationType) throws IOException {
 		if(doc2 != null && !checkTwoFileSame()) {
-			throw new IllegalArgumentException(" Can't Visualize. After removing XML tags, two origin texts aren't exactly same. ");
+			int ii = TEITools.indexOfDifference(doc1.getRootElement().getValue(),doc2.getRootElement().getValue());
+			System.err.println("DOC1 -> " + doc1.getRootElement().getValue().substring(ii-1,ii+100));
+			System.err.println("DOC2 -> " + doc2.getRootElement().getValue().substring(ii-1,ii+100));
+			throw new IllegalArgumentException(" Can't Visualize. After removing XML tags, two origin texts aren't exactly same. Index:"+
+					TEITools.indexOfDifference(doc1.getRootElement().getValue(),doc2.getRootElement().getValue()));
 		}
 		
 		String newfile = "./result_annotations_" + annotationType + ".html";/*

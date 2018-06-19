@@ -270,7 +270,7 @@ public class TEITools {
 		return result.toArray(new Annotation[result.size()]);
 	}
     
-    /*  // A tool for debug
+      // A tool for debug
 	  public static int indexOfDifference(String str1, String str2) {
 	      if (str1 == str2) {
 	          return -1;
@@ -289,5 +289,5 @@ public class TEITools {
 	      }
 	      return -1;
 	  }
-	  */
+	  
 }

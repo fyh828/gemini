@@ -32,11 +32,11 @@ Followed by some parameters :
    * __recall__, the ratio of annotations of the first file which correspond to an annotation in the second file
    * __F-measure__, a combination of precision and recall (https://en.wikipedia.org/wiki/Precision_and_recall)
 * To indicate how this score should be weighted when the two annotations do not have the same label, please use the parameter matchingTypeScore, followed by one of the following options:
-   * `strictTypeMatching`: to keep the score unchanged if both annotation labels are the same, and set it to 0 if they have different annotation labels.
+   * `strictTypeMatching` (default value): to keep the score unchanged if both annotation labels are the same, and set it to 0 if they have different annotation labels.
    * `weightedTypeMatching` : matches two annotations only if they have exactly the same type (currently option by default, no other available)
 * To indicate alignment type:
-   * `greedyMatching` (default value): an annotation in the first file will correspond to at most one annotation in the second file, and vice versa, the matching of annotations in the first and second files is done with a greedy algorithm trying to match the closest annotations first
-   * `maxMatching` : an annotation in the first file will correspond to at most one annotation in the second file, and vice versa, the matching of annotations in the first and second file is done optimally using a maximum matching algorithm in bipartite graphs
+   * `greedyMatching` : an annotation in the first file will correspond to at most one annotation in the second file, and vice versa, the matching of annotations in the first and second files is done with a greedy algorithm trying to match the closest annotations first
+   * `maxMatching` (default value): an annotation in the first file will correspond to at most one annotation in the second file, and vice versa, the matching of annotations in the first and second file is done optimally using a maximum matching algorithm in bipartite graphs
 * To generate a CSV file which contains the result:  
    * `-CSV` : the CSV file will be created at the current folder.
 * To compare one annotation between two files:  

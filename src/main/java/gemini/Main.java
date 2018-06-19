@@ -161,7 +161,8 @@ public class Main {
             }
             
             else {
-            		System.err.println("Unknown command: "+arg[i]+" . Ignored. ");
+            		if(!arg[i].equals(""))
+            			System.err.println("Unknown command: "+arg[i]+" . Ignored. ");
             }
         }
         
@@ -170,9 +171,9 @@ public class Main {
         }
         
         if (alignmentType.equals("")) 
-        		alignmentType = "greedyMatching";
+        		alignmentType = "maxMatching";
         if (scoreTypeMatching.equals("")) 
-        		scoreTypeMatching = "weightedTypeMatching";
+        		scoreTypeMatching = "strictTypeMatching";
         
         // load the files and compute the data structures to store annotations
         if ((!bratfile1.equals("") || !xmlfile1.equals("")) && (!bratfile2.equals("") || !xmlfile2.equals(""))) {
@@ -239,7 +240,7 @@ public class Main {
                 if (verbose) {
                     System.out.println("Computing the similarity score...");
                 }
-                System.out.println("\n\nSimilarity score : " + score(file1, file2, scoreType, alignmentType, scoreTypeMatching, verbose, createCSVfile));
+                System.out.println("\n\nSimilarity score (" + scoreType + ") : " + score(file1, file2, scoreType, alignmentType, scoreTypeMatching, verbose, createCSVfile));
             } else {
                 if (verbose) {
                     System.out.println("Computing all similarity scores...");
@@ -281,7 +282,7 @@ public class Main {
             }
             long stopTime = System.currentTimeMillis();
             long elapsedTime = stopTime - startTime;
-  	      	System.err.println("Time to calculate the score: " + elapsedTime+" ms");
+  	      	System.out.println("Time to calculate the score: " + elapsedTime+" ms");
         }
 
         // or deal with missing files
@@ -577,14 +578,21 @@ public class Main {
 				else
 					vR.add(i);
 			}
-			for (int i = 0; i < th.length; i++) {
-				for (int j = 0; j < tr.length; j++) {
+			boolean finished = false;
+			int i,j,j0 = 0;
+			for (i = 0; i < th.length; i++) {
+				for (j = j0; j < tr.length; j++) {
 					if ((th[i].intersect(tr[j]) == true)/* && (th[i].type.equals(tr[j].type))*/) {
-						 
+						if(!finished) j0 = j;
+						finished = true;
 						DefaultWeightedEdge edge = new DefaultWeightedEdge();
 						g.addEdge(i, th.length + j, edge);
 						g.setEdgeWeight(edge, th[i].intersectionPercentage(tr[j]) * matchingTypeScore(th, tr, th[i].getType(), tr[j].getType(), scoreTypeMatching));
 						//System.out.println(i+" - "+(th.length+j) + " => " + g.getEdgeWeight(edge));//
+					}
+					else if(finished) {
+						finished = false;
+						continue;
 					}
 				}
 			}
@@ -608,13 +616,19 @@ public class Main {
 		else if (algo.equals("greedyMatching")) {
 			// matrix creation
 			float[][] t = new float[th.length][tr.length];
-			for (int i = 0; i < th.length; i++) {
-				for (int j = 0; j < tr.length; j++) {
-					//if (th[i].type.equals(tr[j].type)) {
-						t[i][j] = th[i].intersectionPercentage(tr[j]) * matchingTypeScore(th, tr, th[i].getType(), tr[j].getType(), scoreTypeMatching);
-					//} else {
-					//	t[i][j] = 0;
-					//}//System.out.println(" ***th[i] = " + th[i] + " >>> ** t[i][j]= "+t[i][j]);
+
+            boolean finished = false;
+			int i,j,j0 = 0;
+			for (i = 0; i < th.length; i++) {
+				for (j = j0; j < tr.length; j++) {
+					t[i][j] = th[i].intersectionPercentage(tr[j]) * matchingTypeScore(th, tr, th[i].getType(), tr[j].getType(), scoreTypeMatching);
+					if(t[i][j] == 0) {
+						if(finished) continue;
+					}
+					else {
+						if(!finished) j0 = j;
+						finished = true;
+					}
 				}
 			}
 
@@ -623,14 +637,17 @@ public class Main {
 			while(true) {
 				// search for the maximum
 				max = 0;
-				for (int i = 0; i < t.length; i++) {
-					for (int j = 0; j < t[i].length; j++) {
-						if (max < t[i][j] && t[i][j] > 0) {
+				for (i = 0; i < t.length && max != 1; i++) {
+					for (j = 0; j < t[i].length && max != 1; j++) {
+						if (max < t[i][j]) {
 							max = t[i][j];
 							imax = i;
 							jmax = j;
 						}
+						if(t[i][j] == 0 && max != 0)
+							break;
 					}
+					//System.out.println("Progress: "+(float)i/t.length);
 				}
 				if(max == 0)
 					break;
@@ -642,10 +659,10 @@ public class Main {
 				}
 				 // */
 				// "delete" the column and the line corresponding with the added annotation
-				for (int i = 0; i < t.length; i++) {
+				for (i = 0; i < t.length; i++) {
 					t[i][jmax] = 0;
 				}
-				for (int j = 0; j < t[0].length; j++) {
+				for (j = 0; j < t[0].length; j++) {
 					t[imax][j] = 0;
 				}
 			} 
