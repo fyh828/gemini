@@ -290,4 +290,33 @@ public class TEITools {
 	      return -1;
 	  }
 	  
+	public static int indexOfDifferenceWithTags(String str1, String str2) {
+		if (str1 == str2) {
+			return -1;
+		}
+		if (str1 == null || str2 == null) {
+			return 0;
+		}
+		int i;
+		for (i = 0; i < str1.length() && i < str2.length(); ++i) {
+			if (str1.charAt(i) != str2.charAt(i)) {
+				break;
+			}
+			if (str1.charAt(i) == '<' && str2.charAt(i) == '<') {
+				int q = 1;
+				while (true) {
+					if (str1.charAt(i + q) == '>' && str2.charAt(i + q) == '>')
+						break;
+					if (str1.charAt(i + q) != str2.charAt(i + q))
+						return i;
+					q++;
+				}
+				i += q;
+			}
+		}
+		if (i < str2.length() || i < str1.length()) {
+			return i;
+		}
+		return -1;
+	}
 }

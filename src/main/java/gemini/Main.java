@@ -123,15 +123,24 @@ public class Main {
                         "\n weightedF-measure" +
                         "\n" +
                         "\nTo indicate alignment type:" +
-                        "\n greedyMatching (default value)" +
-                        "\n maxMatching (currently not working)" +
+                        "\n greedyMatching" +
+                        "\n maxMatching (default value)" +
                         "\n" +
                         "\nTo indicate how annotations from different types are taken into account:" +
                         "\n strictTypeMatching (default value):" +
                         "\n   1 if the annotation types are equal, 0 otherwise." +
                         "\n weightedTypeMatching:" + 
                         "\n   between two distinct annotation types, multiply score by the percentage" + 
-                        "\n   of intersection between the two annotation types.");
+                        "\n   of intersection between the two annotation types." +
+                        "\nTo compare two TEI files:"
+                        + "Put -TEI at the first place of all parameters,\n"
+                        + "followed by first TEI file, second TEI file, type and attributes."
+                        + "\nIf you want to generate a XML file from a Brat File and its corresponding text file, use:"
+                        + "\n -XML [Path to Origin text file] [Path to Brat file]"
+                        + "\nIf you want to align two texts, use:"
+                        + "\n -repair [-mode] [Path to Origin text file] [Path to Brat file]"
+                        + "  Mode : -all: high accuracy, high cost"
+                        + "	    -part (default value): fast method");
             }
 
             else if (arg[i].equals("-verbose")) {
@@ -157,6 +166,28 @@ public class Main {
              		return;
              	}
             		TEITools.main(Arrays.copyOfRange(arg, 1, arg.length));
+            		return;
+            }
+            
+            else if (arg[i].equals("-XML")) {
+             	if(i!=0 || arg.length != 3) {
+             		System.err.println(" Usage: Main -XML [Path_TXT_file] [Path_Brat_file]");
+             		return;
+             	}
+            		TextUtils.main(Arrays.copyOfRange(arg, 1, arg.length));
+            		return;
+            }
+            
+            else if (arg[i].equals("-repair")) {
+             	if(i!=0 || arg.length < 3 || arg.length > 4) {
+             		System.err.println(" Usage: Main -repair [mode] [Path_TH] [Path_TR]."
+             				+ " Mode : -all / -part(default)");
+             		return;
+             	}
+             	if(arg.length == 4)
+             		TextUtils.createRepairedFile(arg[2],arg[3],arg[1]);
+             	else 
+             		TextUtils.createRepairedFile(arg[1],arg[2],"-part");
             		return;
             }
             
@@ -788,7 +819,7 @@ public class Main {
 		for(Element ele:l) {
 			String value = ele.getValue();
 			index_start = text.indexOf(value);	
-			count_lines += countNbLinesBeforePosition(text , index_start)*transformNtoCRLF;
+			count_lines += transformNtoCRLF * countNbLinesBeforePosition(text , index_start);
 			ann[count] = new Annotation("T"+count, ele.getName(), 
 					currentPosition+index_start-(count)*separator.length() + count_lines,
 					currentPosition+index_start-(count)*separator.length()+value.replace(separator, "").length() + count_lines,

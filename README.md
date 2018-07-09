@@ -46,3 +46,11 @@ Followed by some parameters :
    `Main -TEI [First_TEI_File] [Second_TEI_File] [Type_to_compare] [Attribute1_to_compare(optional)] [Attribute2_to_compare(optional)] ...`  
    * You can add `-visualize=` before an attribute to generate a HTML file with result for this attribute.
    * `-TEI` should be put at the first place of all parameters. In addition, you cannot use other parameter mentioned above when you use this parameter.
+* If you want to generate a XML file from a Brat File and its corresponding text file, use:
+   `Main -XML [Path to Origin text file] [Path to Brat file]`
+* If two origin texts are not exactly the same, you can correct the one text according to the other text by using the command below:
+   `Main -repair [-mode] [Path to the hypothesis XML file] [Path to the reference XML file]`
+   For each sentence who doesn't match, we use the algorithm of Levenshtein distance to correct the hypothesis text according to the reference text. 
+   You can should the mode parameters from following two options:
+   * -part (by default): The text is separated by sentences. This means if there is a misalignment at the sentences level or above, this may not work well.
+   * -all: Use the algorithm to the whole text. This costs a huge amount of memories.
