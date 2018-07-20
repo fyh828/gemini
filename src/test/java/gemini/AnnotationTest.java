@@ -26,5 +26,4 @@ public class AnnotationTest {
 		assertEquals(anns.length,164);
 	}
 	
-
 }

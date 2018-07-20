@@ -39,9 +39,11 @@ Followed by some parameters :
    * `maxMatching` (default value): an annotation in the first file will correspond to at most one annotation in the second file, and vice versa, the matching of annotations in the first and second file is done optimally using a maximum matching algorithm in bipartite graphs
 * To generate a CSV file which contains the result:  
    * `-CSV` : the CSV file will be created at the current folder.
+* To compare annotations by each type:  
+   * `-type` : This option will calculate the precision, recall and F-measure for each type. [Can't use together with option -CSV, haven't finished yet]
 * To compare one annotation between two files:  
    * `-visualize=[TYPE_YOU_WANT_TO_COMAPRE]` : Result will be highlighted and be stored in a HTML file at the current folder.
-* If you use one XML file and one brat file, and if your brat file uses '\r\n' as the line separator in counting index, you need to compile with the parameter `-CRLF`. When building a XML file, the XML parse library normalize all '\r\n' in contents to '\n', so there is a offset in two annotation files. This option allows to calculate index with this offset.
+* If you use one XML file and one brat file, and if your brat file uses '\r\n' as the line separator in counting index, you need to compile with the parameter `-CRLF`. When building a XML file, the XML parse library normalize all '\r\n' in contents to '\n', so there is a offset in two annotation files. This option allows to calculate index with this offset. You can also use the latest function "repair" to do the same thing.
 * `-TEI` : The command to compare two TEI(Text Encoding Initiative) files is:
    `Main -TEI [First_TEI_File] [Second_TEI_File] [Type_to_compare] [Attribute1_to_compare(optional)] [Attribute2_to_compare(optional)] ...`  
    * You can add `-visualize=` before an attribute to generate a HTML file with result for this attribute.
@@ -52,5 +54,5 @@ Followed by some parameters :
    `Main -repair [-mode] [Path to the hypothesis XML file] [Path to the reference XML file]`
    For each sentence who doesn't match, we use the algorithm of Levenshtein distance to correct the hypothesis text according to the reference text. 
    You can should the mode parameters from following two options:
-   * -part (by default): The text is separated by sentences. This means if there is a misalignment at the sentences level or above, this may not work well.
-   * -all: Use the algorithm to the whole text. This costs a huge amount of memories.
+   * `-part` (by default) : The text is separated by sentences. This means if there is a misalignment at the sentences level or above, this may not work well.
+   * `-all` : Use the algorithm to the whole text. This costs a huge amount of memories.

@@ -44,6 +44,7 @@ public class Main {
 	
 	/** if you use one XML file and one brat file, if your brat file uses '\r\n' as the line separator in counting index , this value should be 1.  */
 	public static int transformNtoCRLF = 0;
+	private static boolean calculateByType = false;
 
 
     public static void main(String[] arg) throws JDOMException, IOException {
@@ -57,6 +58,7 @@ public class Main {
         String scoreTypeMatching = ""; //"strictTypeMatching";//weightedTypeMatching
         boolean verbose = false;
         boolean createCSVfile = false;
+        
         
         // scan the arguments
         for (int i=0 ; i<arg.length ; i++) {
@@ -132,19 +134,25 @@ public class Main {
                         "\n weightedTypeMatching:" + 
                         "\n   between two distinct annotation types, multiply score by the percentage" + 
                         "\n   of intersection between the two annotation types." +
+                        "\nTo compare annotations by each type:"
+                        + " -type : This option will calculate the precision, recall and F-measure for each type." +
                         "\nTo compare two TEI files:"
                         + "Put -TEI at the first place of all parameters,\n"
                         + "followed by first TEI file, second TEI file, type and attributes."
                         + "\nIf you want to generate a XML file from a Brat File and its corresponding text file, use:"
                         + "\n -XML [Path to Origin text file] [Path to Brat file]"
                         + "\nIf you want to align two texts, use:"
-                        + "\n -repair [-mode] [Path to Origin text file] [Path to Brat file]"
-                        + "  Mode : -all: high accuracy, high cost"
+                        + "\n -repair [-mode] [Path to the hypothesis XML file] [Path to the reference XML file]"
+                        + "\n  Mode : -all: high accuracy, high cost\n"
                         + "	    -part (default value): fast method");
             }
 
             else if (arg[i].equals("-verbose")) {
                 verbose = true;
+            }
+            
+            else if (arg[i].equals("-type")) {
+            		calculateByType = true;
             }
             
             else if (arg[i].equals("-CSV")) {
@@ -267,24 +275,39 @@ public class Main {
             long startTime = System.currentTimeMillis();
             
             // compute and display the similarity score
-            if (!scoreType.equals("")) {
-                if (verbose) {
-                    System.out.println("Computing the similarity score...");
-                }
-                System.out.println("\n\nSimilarity score (" + scoreType + ") : " + score(file1, file2, scoreType, alignmentType, scoreTypeMatching, verbose, createCSVfile));
-            } else {
-                if (verbose) {
-                    System.out.println("Computing all similarity scores...");
-                }            
-                System.out.println("\n\nSimilarity score (weak precision) : " + score(file1, file2, "weakprecision", alignmentType, scoreTypeMatching, verbose, createCSVfile)
-                        + "\nSimilarity score (strict precision) : " + score(file1, file2, "strictprecision", alignmentType, scoreTypeMatching, verbose, createCSVfile)
-                        + "\nSimilarity score (weighted precision) : " + score(file1, file2, "weightedprecision", alignmentType, scoreTypeMatching, verbose, createCSVfile)
-                        + "\nSimilarity score (weak recall) : " + score(file1, file2, "weakrecall", alignmentType, scoreTypeMatching, verbose, createCSVfile)
-                        + "\nSimilarity score (strict recall) : " + score(file1, file2, "strictrecall", alignmentType, scoreTypeMatching, verbose, createCSVfile)
-                        + "\nSimilarity score (weighted recall) : " + score(file1, file2, "weightedrecall", alignmentType, scoreTypeMatching, verbose, createCSVfile)
-                        + "\nSimilarity score (weak F-measure) : " + score(file1, file2, "weakF-measure", alignmentType, scoreTypeMatching, verbose, createCSVfile)
-                        + "\nSimilarity score (strict F-measure) : " + score(file1, file2, "strictF-measure", alignmentType, scoreTypeMatching, verbose, createCSVfile)
-                        + "\nSimilarity score (weighted F-measure) : " + score(file1, file2, "weightedF-measure", alignmentType, scoreTypeMatching, verbose, createCSVfile));
+            if(!calculateByType) {
+	            if (!scoreType.equals("")) {
+	                if (verbose) {
+	                    System.out.println("Computing the similarity score...");
+	                }
+	                System.out.println("\n\nSimilarity score (" + scoreType + ") : " + score(file1, file2, scoreType, alignmentType, scoreTypeMatching, verbose, createCSVfile));
+	            } else {
+	                if (verbose) {
+	                    System.out.println("Computing all similarity scores...");
+	                }            
+	                System.out.println("\n\nSimilarity score (weak precision) : " + score(file1, file2, "weakprecision", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+	                        + "\nSimilarity score (strict precision) : " + score(file1, file2, "strictprecision", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+	                        + "\nSimilarity score (weighted precision) : " + score(file1, file2, "weightedprecision", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+	                        + "\nSimilarity score (weak recall) : " + score(file1, file2, "weakrecall", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+	                        + "\nSimilarity score (strict recall) : " + score(file1, file2, "strictrecall", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+	                        + "\nSimilarity score (weighted recall) : " + score(file1, file2, "weightedrecall", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+	                        + "\nSimilarity score (weak F-measure) : " + score(file1, file2, "weakF-measure", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+	                        + "\nSimilarity score (strict F-measure) : " + score(file1, file2, "strictF-measure", alignmentType, scoreTypeMatching, verbose, createCSVfile)
+	                        + "\nSimilarity score (weighted F-measure) : " + score(file1, file2, "weightedF-measure", alignmentType, scoreTypeMatching, verbose, createCSVfile));
+	            }
+            }
+            else {
+            		if (!scoreType.equals("")) {
+            			scoreByType(file1, file2, scoreType, alignmentType, scoreTypeMatching, verbose);
+            		}
+            		else {
+            			System.out.println(" ######## Weak: ######## ");
+            			scoreByType(file1, file2, "weak", alignmentType, scoreTypeMatching, verbose);
+            			System.out.println(" ######## Strict: ######## ");
+            			scoreByType(file1, file2, "strict", alignmentType, scoreTypeMatching, verbose);
+            			System.out.println(" ######## Weighted: ######## ");
+            			scoreByType(file1, file2, "weighted", alignmentType, scoreTypeMatching, verbose);
+            		}
             }
 
             if (verbose) {
@@ -339,8 +362,8 @@ public class Main {
      * @return a similarity score between 0 and 1.
      */
     public static float score(Annotation[] th, Annotation[] tr, String scoreType, String alignmentType, String scoreTypeMatching, boolean verbose, boolean createCSVfile) {
-        Annotation[] correspTh = alignAnnotations(th, tr, alignmentType, scoreTypeMatching, verbose);
-        
+    		Annotation[] correspTh = alignAnnotations(th, tr, alignmentType, scoreTypeMatching, verbose);
+    		
         float result = -1;
         float nbMatches = 0;
         
@@ -351,7 +374,7 @@ public class Main {
         // adjust the matches number depending on the 3rd parameter
         for (int i=0 ; i<correspTh.length ; i++) {
             //for (int j=0 ; j<correspTh[i].length ; j++) {
-            if (correspTh[i] != null) {       
+            if (correspTh[i] != null) {       //TODO:
             		score = matchingAnnotationScore(th, tr, th[i], correspTh[i], scoreType, scoreTypeMatching);
             		if(createCSVfile)	buildCSVFile(sb, th[i], correspTh[i], score);
                 nbMatches += score;
@@ -388,6 +411,55 @@ public class Main {
         }
 
         return result;
+    }
+    
+    // TODO: call buildCSVFile for each type in order to generate multiple CSV file
+    public static void scoreByType(Annotation[] th, Annotation[] tr, String scoreType, String alignmentType, String scoreTypeMatching, boolean verbose) {
+    		// To calculate the result for each type of annotation, we only considerate the same type.
+    		Annotation[] correspTh = alignAnnotations(th, tr, alignmentType, "strictTypeMatching", verbose);
+    		
+    		List<String> types = new ArrayList<>();
+    		List<Float> nbMatches = new ArrayList<>();
+        List<Integer> nbTypeTH = new ArrayList<>();
+        List<Integer> nbTypeTR = new ArrayList<>();
+        
+        for (int i=0 ; i<tr.length ; i++) {
+	        	if(!types.contains(tr[i].getType())) {
+	    			types.add(tr[i].getType());
+	    			nbMatches.add((float) 0);
+	    			nbTypeTH.add(0);
+	    			nbTypeTR.add(0);
+	    		}
+	        	int indexTR = types.indexOf(tr[i].getType());
+	    		nbTypeTR.set(indexTR, nbTypeTR.get(indexTR)+1); 
+        }
+        
+        for (int i=0 ; i<correspTh.length ; i++) {
+            	if(!types.contains(th[i].getType())) {
+            		types.add(th[i].getType());
+            		nbMatches.add((float) 0);
+            		nbTypeTH.add(0);
+            		nbTypeTR.add(0);
+            	}
+            		
+            	int indexTH = types.indexOf(th[i].getType());
+            	nbTypeTH.set(indexTH, nbTypeTH.get(indexTH)+1);
+            		
+            	if (correspTh[i] != null) {
+            		if(th[i].getType().equals(correspTh[i].getType())) {
+            			nbMatches.set(indexTH, nbMatches.get(indexTH) + matchingAnnotationScore(th, tr, th[i], correspTh[i], scoreType, "strictTypeMatching"));
+            		}
+            }
+        }
+        
+        for(int i=0;i<types.size();i++) {
+        	 	System.out.println("\nSimilarity score with type «"+types.get(i)+"»:");
+        	 	System.out.println(" Precision : "+ nbMatches.get(i) / nbTypeTH.get(i));
+        	 	System.out.println(" Recall    : "+ nbMatches.get(i) / nbTypeTR.get(i));
+        	 	System.out.println(" F-measure : "+ (2 * nbMatches.get(i) / nbTypeTH.get(i) * nbMatches.get(i) / nbTypeTR.get(i) ) / 
+        				( nbMatches.get(i) / nbTypeTH.get(i) + nbMatches.get(i) / nbTypeTR.get(i)));
+        	 	System.out.println(" **************************** ");
+        }
     }
 
 

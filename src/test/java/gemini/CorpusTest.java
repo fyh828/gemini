@@ -27,7 +27,7 @@ public class CorpusTest {
 	    System.setOut(null);
 	    System.setErr(null);
 	}
-	
+
 	//@Test
 	public void matchingAnnoScoreTest() {
 		Annotation[] th = new Annotation[2];
@@ -120,7 +120,7 @@ public class CorpusTest {
 	}
 	
 	//https://stackoverflow.com/questions/5709232/how-do-i-include-etc-in-xml-attribute-values
-	@Test
+	//@Test
 	public void cscTest() throws JDOMException, IOException {
 		String[] args1 = { "-xmlfile1", "src/test/resources/Juin/80jours_csc_csc.xml", "-xmlfile2",
 				"src/test/resources/Juin/80jours_csc_csc-pers.xml","maxaMatching","weakprecision","strictTypeMatching","-visualize=date" };
@@ -130,5 +130,37 @@ public class CorpusTest {
 				"src/test/resources/Juin/80jours_csc_csc-pers.xml", "persName", /*"-visualize=when"*/ };
 		Main.main(args1);
 	}
-
+	
+	//@Test
+	public void calculateByType() throws JDOMException, IOException {
+		String[] args1 = { "-xmlfile1", "src/test/resources/CorpusAPILGRAMLAB_2011-06_annote_Lidia4.xml", "-xmlfile2",
+				"src/test/resources/CorpusAPILGRAMLAB_2011-06_annoteEleni.xml", "-type" };
+		String[] args2 = { "-xmlfile1", "src/test/resources/CorpusAPILGRAMLAB_2011-06_annote_Lidia4.xml", "-xmlfile2",
+				"src/test/resources/CorpusAPILGRAMLAB_2011-06_annoteEleni.xml","strictTypeMatching" };
+		Main.main(args2);
+		Main.main(args1);
+		
+	}
+	
+	//@Test
+	public void calculateByType2() throws JDOMException, IOException {
+		String[] args1 = { "-xmlfile1", "src/test/resources/repair/mar/ORG_AUT1.xml", "-xmlfile2",
+				"src/test/resources/repair/mar/ORG_MAN1A.xml", "-type" };
+		String[] args2 = { "-xmlfile1", "src/test/resources/repair/mar/ORG_AUT1.xml", "-xmlfile2",
+				"src/test/resources/repair/mar/ORG_MAN1A.xml","strictTypeMatching","weakF-measure","-CSV" };
+		Main.main(args2);
+		Main.main(args1);
+		
+	}
+	
+	//@Test
+	public void calculateByType3() throws JDOMException, IOException {
+		String[] args1 = { "-xmlfile1", "src/test/resources/Juin/80jours_csc_csc.xml", "-xmlfile2",
+				"src/test/resources/Juin/80jours_csc_csc-pers.xml", "-type" };
+		String[] args2 = { "-xmlfile1", "src/test/resources/Juin/80jours_csc_csc.xml", "-xmlfile2",
+				"src/test/resources/Juin/80jours_csc_csc-pers.xml","strictTypeMatching" };
+		//Main.main(args2);
+		Main.main(args1);
+		
+	}
 }

@@ -8,7 +8,7 @@ import org.jdom2.JDOMException;
 import org.junit.Test;
 
 public class RepairCorpusTest {
-	@Test
+	//@Test
 	public void simpleTest1() throws JDOMException, IOException {
 		String file_tr = "src/test/resources/repair/manuel1.xml";
 		String file_th = "src/test/resources/repair/auto1.xml";
@@ -16,7 +16,7 @@ public class RepairCorpusTest {
 		Main.main(args1);
 	}
 	
-	@Test
+	//@Test
 	public void simpleTest2() throws JDOMException, IOException {
 		String file_tr = "src/test/resources/repair/manuel2.xml";
 		String file_th = "src/test/resources/repair/auto2.xml";
