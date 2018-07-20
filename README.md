@@ -3,6 +3,10 @@
 ## Short Description
 
 Compare two text annotations and provide an alignment score.
+![image](https://github.com/fyh828/gemini/blob/master/demo/RESULTAT_GLOB.png)
+![image](https://github.com/fyh828/gemini/blob/master/demo/vis1.png)
+![image](https://github.com/fyh828/gemini/blob/master/demo/vis2.png)
+![image](https://github.com/fyh828/gemini/blob/master/demo/csv1.png)
 
 ## Installation
 
@@ -52,7 +56,7 @@ Followed by some parameters :
    `Main -XML [Path to Origin text file] [Path to Brat file]`
 * If two origin texts are not exactly the same, you can correct the one text according to the other text by using the command below:
    `Main -repair [-mode] [Path to the hypothesis XML file] [Path to the reference XML file]`
-   For each sentence who doesn't match, we use the algorithm of Levenshtein distance to correct the hypothesis text according to the reference text. 
+   For each sentence who doesn't match, we use the algorithm of Levenshtein distance to modify the hypothesis text according to the reference text. 
    You can should the mode parameters from following two options:
    * `-part` (by default) : The text is separated by sentences. This means if there is a misalignment at the sentences level or above, this may not work well.
    * `-all` : Use the algorithm to the whole text. This costs a huge amount of memories.
