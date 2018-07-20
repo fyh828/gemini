@@ -3,10 +3,15 @@
 ## Short Description
 
 Compare two text annotations and provide an alignment score.
-![image](https://github.com/fyh828/gemini/blob/master/demo/RESULTAT_GLOB.png)
-![image](https://github.com/fyh828/gemini/blob/master/demo/vis1.png)
-![image](https://github.com/fyh828/gemini/blob/master/demo/vis2.png)
-![image](https://github.com/fyh828/gemini/blob/master/demo/csv1.png)
+
+<img src="https://github.com/fyh828/gemini/blob/master/demo/RESULTAT_GLOB.png" width="285" height="390"></br>
+
+<img src="https://github.com/fyh828/gemini/blob/master/demo/vis1.png" width="537" height="232"></br>
+
+<img src="https://github.com/fyh828/gemini/blob/master/demo/vis2.png" width="537" height="232"></br>
+
+<img src="https://github.com/fyh828/gemini/blob/master/demo/csv1.png" width="491" height="472">
+
 
 ## Installation
 
