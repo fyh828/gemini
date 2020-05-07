@@ -23,6 +23,18 @@ You need to :
 
 Once you've reached the folder which contains the `pom.xml` file with the terminal, the command to compile and run at the same time is :  
 `mvn -q clean compile exec:java -Dexec.mainClass="gemini.Main" -Dexec.args="[choose_your_argument_here]"`
+
+Alternativily, if you are only looking to compile once Gemini, you can do:
+
+`mvn clean compile assembly:single`
+
+A new file named `gemini-X.X.X-SNAPSHOT-jar-with-dependencies.jar` will be placed under the `target` directory.
+
+You can rename this file as ``gemini.jar`` and move it to your preferred location.
+
+To execute `gemini.jar` you must type :
+
+`java -cp gemini.jar gemini.Main`
   
 Followed by some parameters :  
 * To indicate the two files to compare (which contain annotations defined by: an annotation type, the index of the first and the last characters covered by the annotations, as well as the part of the text covered by the annotation):
